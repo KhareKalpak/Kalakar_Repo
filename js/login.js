@@ -268,6 +268,19 @@ function validateAge(age, errorElementId) {
     }
 }
 
+// Validate role selection
+function validateRole(selectedRole) {
+    const errorElement = document.getElementById('roleError');
+
+    if (!selectedRole) {
+        errorElement.textContent = 'Please select a role (Actor or Director/Producer)';
+        return false;
+    } else {
+        errorElement.textContent = '';
+        return true;
+    }
+}
+
 // Handle login form submission
 function handleLoginSubmit(e) {
     e.preventDefault();
