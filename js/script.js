@@ -113,7 +113,8 @@ function initializeSmoothScroll() {
 
 // ===== GET STARTED BUTTON FUNCTIONALITY =====
 function initializeGetStartedButtons() {
-    const ctaButtons = document.querySelectorAll('.cta-button');
+    // Only target buttons that are specifically for getting started (not back buttons)
+    const ctaButtons = document.querySelectorAll('.cta-button:not([onclick])');
 
     ctaButtons.forEach(button => {
         button.addEventListener('click', function(e) {
