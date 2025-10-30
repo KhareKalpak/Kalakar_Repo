@@ -745,7 +745,19 @@ function initializeLogoutForDashboard() {
 }
 
 function handleDashboardLogout() {
-    sessionStorage.removeItem('kalakarUser');
-    alert('You have been logged out successfully!');
-    window.location.href = 'index.html';
+    // Sign out from Firebase
+    firebase.auth().signOut()
+        .then(function() {
+            // Clear session storage
+            sessionStorage.removeItem('kalakarUser');
+            alert('You have been logged out successfully!');
+            window.location.href = 'index.html';
+        })
+        .catch(function(error) {
+            console.error('Firebase logout error:', error);
+            // Still perform local logout even if Firebase fails
+            sessionStorage.removeItem('kalakarUser');
+            alert('You have been logged out.');
+            window.location.href = 'index.html';
+        });
 }
