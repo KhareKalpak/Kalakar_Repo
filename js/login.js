@@ -87,12 +87,14 @@ document.addEventListener('keydown', function(e) {
 });
 
 // Prevent closing when clicking inside mobile menu
-const mobileMenu = document.querySelector('.mobile-menu');
-if (mobileMenu) {
-    mobileMenu.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-}
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuElement = document.querySelector('.mobile-menu');
+    if (mobileMenuElement) {
+        mobileMenuElement.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+});
 
 // ===== FORM TOGGLE FUNCTIONALITY =====
 function initializeFormToggle() {
