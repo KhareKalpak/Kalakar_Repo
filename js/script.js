@@ -147,3 +147,77 @@ if (mobileMenu) {
         e.stopPropagation();
     });
 }
+
+// ===== USER SESSION MANAGEMENT =====
+function checkUserSession() {
+    const userData = sessionStorage.getItem('kalakarUser');
+    const getStartedBtn = document.getElementById('getStartedBtn');
+    const myAccountSection = document.getElementById('myAccountSection');
+    const accountEmail = document.getElementById('accountEmail');
+
+    const mobileGetStartedBtn = document.getElementById('mobileGetStartedBtn');
+    const mobileMyAccountSection = document.getElementById('mobileMyAccountSection');
+    const mobileAccountEmail = document.getElementById('mobileAccountEmail');
+
+    if (userData) {
+        try {
+            const user = JSON.parse(userData);
+
+            // Hide Get Started, show My Account (Desktop)
+            if (getStartedBtn) getStartedBtn.style.display = 'none';
+            if (myAccountSection) myAccountSection.style.display = 'flex';
+            if (accountEmail) accountEmail.textContent = user.email;
+
+            // Hide Get Started, show My Account (Mobile)
+            if (mobileGetStartedBtn) mobileGetStartedBtn.style.display = 'none';
+            if (mobileMyAccountSection) mobileMyAccountSection.style.display = 'block';
+            if (mobileAccountEmail) mobileAccountEmail.textContent = user.email;
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+        }
+    }
+}
+
+// Initialize logout button functionality
+function initializeLogoutButtons() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleLogout();
+        });
+    }
+
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleLogout();
+        });
+    }
+}
+
+// Handle logout
+function handleLogout() {
+    // Clear session storage
+    sessionStorage.removeItem('kalakarUser');
+
+    // Hide My Account, show Get Started (Desktop)
+    const getStartedBtn = document.getElementById('getStartedBtn');
+    const myAccountSection = document.getElementById('myAccountSection');
+    if (getStartedBtn) getStartedBtn.style.display = 'block';
+    if (myAccountSection) myAccountSection.style.display = 'none';
+
+    // Hide My Account, show Get Started (Mobile)
+    const mobileGetStartedBtn = document.getElementById('mobileGetStartedBtn');
+    const mobileMyAccountSection = document.getElementById('mobileMyAccountSection');
+    if (mobileGetStartedBtn) mobileGetStartedBtn.style.display = 'block';
+    if (mobileMyAccountSection) mobileMyAccountSection.style.display = 'none';
+
+    // Close mobile menu if open
+    closeMobileMenu();
+
+    // Show alert
+    alert('You have been logged out successfully!');
+}
