@@ -486,7 +486,7 @@ function loadDirectorDashboard(user, userId) {
     loadApplicationsForReview(userId);
 }
 
-function handleAuditionSubmit(e) {
+function handleAuditionSubmit(e, userId) {
     e.preventDefault();
 
     const projectTitle = document.getElementById('projectTitle').value;
@@ -506,29 +506,38 @@ function handleAuditionSubmit(e) {
     if (isValid) {
         // Create audition object
         const audition = {
-            id: Date.now(),
+            directorId: userId,
             projectTitle: projectTitle,
             roleTitle: roleTitle,
             roleDescription: roleDescription,
             location: location,
             deadline: deadline,
             postedDate: new Date().toLocaleDateString(),
-            applications: []
+            createdAt: new Date().toISOString()
         };
 
-        // Save to localStorage
-        const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
-        auditions.push(audition);
-        localStorage.setItem('directorAuditions', JSON.stringify(auditions));
+        // Save to Firestore
+        db.collection('auditions').add(audition)
+            .then(function(docRef) {
+                // Also save to localStorage for backward compatibility
+                audition.id = docRef.id;
+                const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
+                auditions.push(audition);
+                localStorage.setItem('directorAuditions', JSON.stringify(auditions));
 
-        // Reset form
-        document.getElementById('auditionForm').reset();
+                // Reset form
+                document.getElementById('auditionForm').reset();
 
-        // Show success message
-        alert('Audition posted successfully!');
+                // Show success message
+                alert('Audition posted successfully!');
 
-        // Reload auditions list
-        loadPostedAuditions();
+                // Reload auditions list
+                loadPostedAuditions(userId);
+            })
+            .catch(function(error) {
+                console.error('Error saving audition to Firestore:', error);
+                alert('Error posting audition. Please try again.');
+            });
     }
 }
 
