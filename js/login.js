@@ -96,49 +96,6 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// ===== FORM TOGGLE FUNCTIONALITY =====
-function initializeFormToggle() {
-    const toggleButtons = document.querySelectorAll('.toggle-btn');
-    const authForms = document.querySelectorAll('.auth-form');
-
-    toggleButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetForm = this.getAttribute('data-form');
-
-            // Update active toggle button
-            toggleButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-
-            // Update active form
-            authForms.forEach(form => form.classList.remove('active'));
-            const activeForm = document.getElementById(targetForm + 'Form');
-            if (activeForm) {
-                activeForm.classList.add('active');
-            }
-
-            // Clear form values and errors
-            clearFormState();
-        });
-    });
-}
-
-// Clear form values and error messages
-function clearFormState() {
-    const forms = document.querySelectorAll('.auth-form');
-    forms.forEach(form => {
-        // Clear all inputs
-        form.querySelectorAll('.form-input').forEach(input => {
-            input.value = '';
-        });
-
-        // Clear all error messages
-        form.querySelectorAll('.error-message').forEach(errorMsg => {
-            errorMsg.textContent = '';
-        });
-    });
-}
-
 // ===== FORM VALIDATION =====
 function initializeFormValidation() {
     const loginForm = document.getElementById('loginForm');
