@@ -29,7 +29,16 @@
                 <a href="#contact" class="nav-link">Contact</a>
             </nav>
 
-            <button class="cta-button header-cta">Get Started</button>
+            <!-- Get Started Button (shown when not logged in) -->
+            <button class="cta-button header-cta" id="getStartedBtn">Get Started</button>
+
+            <!-- My Account Section (shown when logged in) -->
+            <div class="my-account" id="myAccountSection" style="display: none;">
+                <div class="account-info">
+                    <span class="account-email" id="accountEmail"></span>
+                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                </div>
+            </div>
         </div>
     </header>
 
