@@ -566,6 +566,36 @@ body::after {
 .contact {
     background-color: #e0f6ff;
     padding: 60px 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.contact::before {
+    content: '';
+    position: absolute;
+    bottom: -150px;
+    left: -150px;
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(0, 153, 204, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float-circle 18s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.contact::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(135, 206, 235, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float-slow-reverse 20s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
 }
 
 .contact .section-heading {
