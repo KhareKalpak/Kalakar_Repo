@@ -615,49 +615,114 @@ function loadPostedAuditions(userId) {
         });
 }
 
-function loadApplicationsForReview() {
-    const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
+function loadApplicationsForReview(userId) {
     const reviewDiv = document.getElementById('reviewApplications');
 
-    let totalApplications = 0;
-    let html = '';
+    // Load auditions for this director
+    db.collection('auditions').where('directorId', '==', userId).get()
+        .then(function(auditionSnapshot) {
+            let html = '';
+            let totalApplications = 0;
 
-    auditions.forEach((audition) => {
-        if (audition.applications.length > 0) {
-            html += `
-                <div class="review-section">
-                    <h4>${audition.projectTitle} - ${audition.roleTitle}</h4>
-                    <div class="applications-to-review">
-            `;
+            auditionSnapshot.forEach(function(auditionDoc) {
+                const audition = auditionDoc.data();
+                const auditionId = auditionDoc.id;
 
-            audition.applications.forEach((app) => {
-                html += `
-                    <div class="actor-portfolio">
-                        <p><strong>Actor Email:</strong> ${app.actorEmail}</p>
-                        <p><strong>Portfolio Title:</strong> ${app.portfolio.title}</p>
-                        <p><strong>Bio:</strong> ${app.portfolio.bio}</p>
-                        <p><strong>Skills:</strong> ${app.portfolio.skills}</p>
-                        <div class="action-buttons">
-                            <button class="btn-select" onclick="selectActor('${audition.id}', '${app.actorEmail}')">Select Actor</button>
-                            <button class="btn-reject" onclick="rejectActor('${audition.id}', '${app.actorEmail}')">Reject</button>
-                        </div>
-                    </div>
-                `;
-                totalApplications++;
+                // Load applications for this audition
+                db.collection('applications').where('auditionId', '==', auditionId).get()
+                    .then(function(appSnapshot) {
+                        if (appSnapshot.size > 0) {
+                            html += `
+                                <div class="review-section">
+                                    <h4>${audition.projectTitle} - ${audition.roleTitle}</h4>
+                                    <div class="applications-to-review">
+                            `;
+
+                            appSnapshot.forEach(function(appDoc) {
+                                const app = appDoc.data();
+                                html += `
+                                    <div class="actor-portfolio">
+                                        <p><strong>Actor Email:</strong> ${app.actorEmail}</p>
+                                        <p><strong>Portfolio Title:</strong> ${app.portfolio.title}</p>
+                                        <p><strong>Bio:</strong> ${app.portfolio.bio}</p>
+                                        <p><strong>Skills:</strong> ${app.portfolio.skills}</p>
+                                        <div class="action-buttons">
+                                            <button class="btn-select" onclick="selectActor('${auditionId}', '${app.actorEmail}')">Select Actor</button>
+                                            <button class="btn-reject" onclick="rejectActor('${auditionId}', '${app.actorEmail}')">Reject</button>
+                                        </div>
+                                    </div>
+                                `;
+                                totalApplications++;
+                            });
+
+                            html += `
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
             });
 
-            html += `
-                    </div>
-                </div>
-            `;
-        }
-    });
+            // If no auditions or applications, show empty message
+            if (auditionSnapshot.empty) {
+                reviewDiv.innerHTML = '<p class="empty-message">No actor applications to review yet.</p>';
+            } else {
+                // Use setTimeout to allow all nested promises to complete
+                setTimeout(function() {
+                    if (html === '') {
+                        reviewDiv.innerHTML = '<p class="empty-message">No actor applications to review yet.</p>';
+                    } else {
+                        reviewDiv.innerHTML = html;
+                    }
+                }, 500);
+            }
+        })
+        .catch(function(error) {
+            console.error('Error loading applications for review from Firestore:', error);
+            // Fall back to localStorage
+            const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
+            const reviewDiv = document.getElementById('reviewApplications');
 
-    if (totalApplications === 0) {
-        reviewDiv.innerHTML = '<p class="empty-message">No actor applications to review yet.</p>';
-    } else {
-        reviewDiv.innerHTML = html;
-    }
+            let totalApplications = 0;
+            let html = '';
+
+            auditions.forEach((audition) => {
+                if (audition.applications && audition.applications.length > 0) {
+                    html += `
+                        <div class="review-section">
+                            <h4>${audition.projectTitle} - ${audition.roleTitle}</h4>
+                            <div class="applications-to-review">
+                    `;
+
+                    audition.applications.forEach((app) => {
+                        html += `
+                            <div class="actor-portfolio">
+                                <p><strong>Actor Email:</strong> ${app.actorEmail}</p>
+                                <p><strong>Portfolio Title:</strong> ${app.portfolio.title}</p>
+                                <p><strong>Bio:</strong> ${app.portfolio.bio}</p>
+                                <p><strong>Skills:</strong> ${app.portfolio.skills}</p>
+                                <div class="action-buttons">
+                                    <button class="btn-select" onclick="selectActor('${audition.id}', '${app.actorEmail}')">Select Actor</button>
+                                    <button class="btn-reject" onclick="rejectActor('${audition.id}', '${app.actorEmail}')">Reject</button>
+                                </div>
+                            </div>
+                        `;
+                        totalApplications++;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            if (totalApplications === 0) {
+                reviewDiv.innerHTML = '<p class="empty-message">No actor applications to review yet.</p>';
+            } else {
+                reviewDiv.innerHTML = html;
+            }
+        });
 }
 
 function selectActor(auditionId, actorEmail) {
