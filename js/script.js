@@ -223,6 +223,12 @@ function handleLogout() {
     if (mobileGetStartedBtn) mobileGetStartedBtn.style.display = 'block';
     if (mobileMyAccountSection) mobileMyAccountSection.style.display = 'none';
 
+    // Hide Dashboard, show Get Started (Hero Section)
+    const heroGetStarted = document.getElementById('heroGetStarted');
+    const heroDashboard = document.getElementById('heroDashboard');
+    if (heroGetStarted) heroGetStarted.style.display = 'inline-block';
+    if (heroDashboard) heroDashboard.style.display = 'none';
+
     // Close mobile menu if open
     closeMobileMenu();
 
