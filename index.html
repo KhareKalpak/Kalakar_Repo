@@ -67,7 +67,12 @@
         <div class="hero-content">
             <h1 class="hero-heading">Welcome to Kalakar</h1>
             <p class="hero-subheading">Your Premier Platform for Actors, Directors & Producers in Pune</p>
-            <button class="cta-button">Get Started</button>
+
+            <!-- Get Started Button (shown when not logged in) -->
+            <button class="cta-button hero-get-started" id="heroGetStarted">Get Started</button>
+
+            <!-- Go to Dashboard Button (shown when logged in) -->
+            <button class="cta-button hero-dashboard" id="heroDashboard" style="display: none;" onclick="window.location.href='dashboard.html'">Go to Dashboard</button>
         </div>
     </section>
 
