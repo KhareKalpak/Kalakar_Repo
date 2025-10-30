@@ -216,31 +216,6 @@ function validateRole(selectedRole) {
     }
 }
 
-// Handle login form submission
-function handleLoginSubmit(e) {
-    e.preventDefault();
-
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-
-    // Validate all fields
-    const emailValid = validateEmail(email, 'loginEmailError');
-    const passwordValid = validatePassword(password, 'loginPasswordError');
-
-    if (emailValid && passwordValid) {
-        // Store user data in sessionStorage
-        const userData = {
-            email: email,
-            role: 'unknown', // Role not known for existing users on login
-            joinDate: new Date().toLocaleDateString()
-        };
-        sessionStorage.setItem('kalakarUser', JSON.stringify(userData));
-
-        showSuccessMessage('Logged in successfully!');
-        disableSubmitButton(document.getElementById('loginForm').querySelector('.form-submit-btn'));
-    }
-}
-
 // Handle signup form submission
 function handleSignupSubmit(e) {
     e.preventDefault();
