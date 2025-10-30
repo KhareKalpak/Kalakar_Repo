@@ -117,12 +117,13 @@ function initializeGetStartedButtons() {
 
     ctaButtons.forEach(button => {
         button.addEventListener('click', function(e) {
-            // Prevent default behavior for buttons in forms
-            if (this.type === 'submit') {
+            // Check if button is inside a form (for login page form submission)
+            if (this.closest('form')) {
                 return;
             }
 
             // Navigate to login page
+            e.preventDefault();
             window.location.href = 'login.html';
         });
     });
