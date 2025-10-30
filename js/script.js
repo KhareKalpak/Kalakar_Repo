@@ -116,15 +116,14 @@ function initializeGetStartedButtons() {
     const ctaButtons = document.querySelectorAll('.cta-button');
 
     ctaButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            // This will navigate to login page when implemented
-            // For now, it's a placeholder that can be extended
-            // Example: window.location.href = '/login';
-            console.log('Get Started clicked - Navigate to login/signup page');
+        button.addEventListener('click', function(e) {
+            // Prevent default behavior for buttons in forms
+            if (this.type === 'submit') {
+                return;
+            }
 
-            // Placeholder for future login/signup page navigation
-            // Uncomment when login page is ready:
-            // window.location.href = '/login.html';
+            // Navigate to login page
+            window.location.href = 'login.html';
         });
     });
 }
