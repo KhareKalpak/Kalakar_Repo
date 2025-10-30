@@ -100,7 +100,8 @@ function initializeFormToggle() {
     const authForms = document.querySelectorAll('.auth-form');
 
     toggleButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
             const targetForm = this.getAttribute('data-form');
 
             // Update active toggle button
