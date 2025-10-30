@@ -413,27 +413,53 @@ function confirmApplication(auditionId, projectTitle, roleTitle, location, portf
         });
 }
 
-function loadActorApplications() {
-    const applications = JSON.parse(localStorage.getItem('actorApplications') || '[]');
+function loadActorApplications(userId) {
     const applicationsDiv = document.getElementById('applicationsStatus');
 
-    if (applications.length === 0) {
-        applicationsDiv.innerHTML = '<p class="empty-message">No audition applications yet. Check back soon!</p>';
-    } else {
-        let html = '';
-        applications.forEach((app, index) => {
-            html += `
-                <div class="application-card">
-                    <h4>${app.projectTitle}</h4>
-                    <p><strong>Role:</strong> ${app.roleTitle}</p>
-                    <p><strong>Location:</strong> ${app.location}</p>
-                    <p><strong>Status:</strong> <span class="status-${app.status}">${app.status.toUpperCase()}</span></p>
-                    <p><strong>Applied on:</strong> ${app.appliedDate}</p>
-                </div>
-            `;
+    // Load applications from Firestore
+    db.collection('applications').where('actorId', '==', userId).get()
+        .then(function(querySnapshot) {
+            if (querySnapshot.empty) {
+                applicationsDiv.innerHTML = '<p class="empty-message">No audition applications yet. Check back soon!</p>';
+            } else {
+                let html = '';
+                querySnapshot.forEach(function(doc) {
+                    const app = doc.data();
+                    html += `
+                        <div class="application-card">
+                            <h4>${app.projectTitle}</h4>
+                            <p><strong>Role:</strong> ${app.roleTitle}</p>
+                            <p><strong>Location:</strong> ${app.location}</p>
+                            <p><strong>Status:</strong> <span class="status-${app.status}">${app.status.toUpperCase()}</span></p>
+                            <p><strong>Applied on:</strong> ${app.appliedDate}</p>
+                        </div>
+                    `;
+                });
+                applicationsDiv.innerHTML = html;
+            }
+        })
+        .catch(function(error) {
+            console.error('Error loading applications from Firestore:', error);
+            // Fall back to localStorage
+            const applications = JSON.parse(localStorage.getItem('actorApplications') || '[]');
+            if (applications.length === 0) {
+                applicationsDiv.innerHTML = '<p class="empty-message">No audition applications yet. Check back soon!</p>';
+            } else {
+                let html = '';
+                applications.forEach((app, index) => {
+                    html += `
+                        <div class="application-card">
+                            <h4>${app.projectTitle}</h4>
+                            <p><strong>Role:</strong> ${app.roleTitle}</p>
+                            <p><strong>Location:</strong> ${app.location}</p>
+                            <p><strong>Status:</strong> <span class="status-${app.status}">${app.status.toUpperCase()}</span></p>
+                            <p><strong>Applied on:</strong> ${app.appliedDate}</p>
+                        </div>
+                    `;
+                });
+                applicationsDiv.innerHTML = html;
+            }
         });
-        applicationsDiv.innerHTML = html;
-    }
 }
 
 // ===== DIRECTOR DASHBOARD =====
