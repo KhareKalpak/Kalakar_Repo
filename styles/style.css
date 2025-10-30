@@ -518,6 +518,22 @@ body::after {
 .about {
     background-color: #ffffff;
     padding: 60px 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.about::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(0, 153, 204, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float-slow 20s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
 }
 
 .about .section-heading {
