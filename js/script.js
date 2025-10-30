@@ -159,11 +159,15 @@ function checkUserSession() {
     const mobileMyAccountSection = document.getElementById('mobileMyAccountSection');
     const mobileAccountEmail = document.getElementById('mobileAccountEmail');
 
+    // Hero section buttons
+    const heroGetStarted = document.getElementById('heroGetStarted');
+    const heroDashboard = document.getElementById('heroDashboard');
+
     if (userData) {
         try {
             const user = JSON.parse(userData);
 
-            // Hide Get Started, show My Account (Desktop)
+            // Hide Get Started, show My Account (Header)
             if (getStartedBtn) getStartedBtn.style.display = 'none';
             if (myAccountSection) myAccountSection.style.display = 'flex';
             if (accountEmail) accountEmail.textContent = user.email;
@@ -172,6 +176,10 @@ function checkUserSession() {
             if (mobileGetStartedBtn) mobileGetStartedBtn.style.display = 'none';
             if (mobileMyAccountSection) mobileMyAccountSection.style.display = 'block';
             if (mobileAccountEmail) mobileAccountEmail.textContent = user.email;
+
+            // Hide Get Started, show Dashboard (Hero Section)
+            if (heroGetStarted) heroGetStarted.style.display = 'none';
+            if (heroDashboard) heroDashboard.style.display = 'inline-block';
         } catch (e) {
             console.error('Error parsing user data:', e);
         }
