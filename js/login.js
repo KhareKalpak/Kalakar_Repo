@@ -98,28 +98,7 @@ document.addEventListener('keydown', function(e) {
 
 // ===== FORM VALIDATION =====
 function initializeFormValidation() {
-    const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
-
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLoginSubmit);
-
-        // Add blur event listeners for real-time validation
-        const loginEmail = document.getElementById('loginEmail');
-        const loginPassword = document.getElementById('loginPassword');
-
-        if (loginEmail) {
-            loginEmail.addEventListener('blur', function() {
-                validateEmail(this.value, 'loginEmailError');
-            });
-        }
-
-        if (loginPassword) {
-            loginPassword.addEventListener('blur', function() {
-                validatePassword(this.value, 'loginPasswordError');
-            });
-        }
-    }
 
     if (signupForm) {
         signupForm.addEventListener('submit', handleSignupSubmit);
