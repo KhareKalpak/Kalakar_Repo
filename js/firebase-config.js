@@ -14,12 +14,22 @@ const firebaseConfig = {
   measurementId: "G-N8R5QY7G4J"
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// Wait for Firebase SDK to load, then initialize
+function initializeFirebase() {
+  if (typeof firebase !== 'undefined') {
+    // Firebase is loaded, initialize it
+    firebase.initializeApp(firebaseConfig);
 
-// Get references to Firebase services
-const auth = firebase.auth();
-const db = firebase.firestore();
+    // Get references to Firebase services
+    window.auth = firebase.auth();
+    window.db = firebase.firestore();
 
-// Export for use in other files
-console.log("Firebase initialized successfully!");
+    console.log("Firebase initialized successfully!");
+  } else {
+    // Firebase not ready yet, try again in 100ms
+    setTimeout(initializeFirebase, 100);
+  }
+}
+
+// Start initialization
+initializeFirebase();
