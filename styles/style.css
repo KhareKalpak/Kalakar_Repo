@@ -621,6 +621,39 @@ body {
     opacity: 0.9;
 }
 
+/* Role Selection Styling */
+.role-selection {
+    display: flex;
+    gap: 20px;
+    margin-top: 8px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.role-radio {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #0099cc;
+}
+
+.role-label {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333333;
+    margin: 0;
+}
+
+.role-radio:hover {
+    opacity: 0.8;
+}
+
 /* Form Elements */
 .auth-form {
     display: none;
