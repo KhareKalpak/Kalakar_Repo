@@ -208,30 +208,40 @@ function initializeLogoutButtons() {
 
 // Handle logout
 function handleLogout() {
-    // Clear session storage
-    sessionStorage.removeItem('kalakarUser');
+    // Sign out from Firebase
+    firebase.auth().signOut()
+        .then(function() {
+            // Clear session storage
+            sessionStorage.removeItem('kalakarUser');
 
-    // Hide My Account, show Get Started (Desktop)
-    const getStartedBtn = document.getElementById('getStartedBtn');
-    const myAccountSection = document.getElementById('myAccountSection');
-    if (getStartedBtn) getStartedBtn.style.display = 'block';
-    if (myAccountSection) myAccountSection.style.display = 'none';
+            // Hide My Account, show Get Started (Desktop)
+            const getStartedBtn = document.getElementById('getStartedBtn');
+            const myAccountSection = document.getElementById('myAccountSection');
+            if (getStartedBtn) getStartedBtn.style.display = 'block';
+            if (myAccountSection) myAccountSection.style.display = 'none';
 
-    // Hide My Account, show Get Started (Mobile)
-    const mobileGetStartedBtn = document.getElementById('mobileGetStartedBtn');
-    const mobileMyAccountSection = document.getElementById('mobileMyAccountSection');
-    if (mobileGetStartedBtn) mobileGetStartedBtn.style.display = 'block';
-    if (mobileMyAccountSection) mobileMyAccountSection.style.display = 'none';
+            // Hide My Account, show Get Started (Mobile)
+            const mobileGetStartedBtn = document.getElementById('mobileGetStartedBtn');
+            const mobileMyAccountSection = document.getElementById('mobileMyAccountSection');
+            if (mobileGetStartedBtn) mobileGetStartedBtn.style.display = 'block';
+            if (mobileMyAccountSection) mobileMyAccountSection.style.display = 'none';
 
-    // Hide Dashboard, show Get Started (Hero Section)
-    const heroGetStarted = document.getElementById('heroGetStarted');
-    const heroDashboard = document.getElementById('heroDashboard');
-    if (heroGetStarted) heroGetStarted.style.display = 'inline-block';
-    if (heroDashboard) heroDashboard.style.display = 'none';
+            // Hide Dashboard, show Get Started (Hero Section)
+            const heroGetStarted = document.getElementById('heroGetStarted');
+            const heroDashboard = document.getElementById('heroDashboard');
+            if (heroGetStarted) heroGetStarted.style.display = 'inline-block';
+            if (heroDashboard) heroDashboard.style.display = 'none';
 
-    // Close mobile menu if open
-    closeMobileMenu();
+            // Close mobile menu if open
+            closeMobileMenu();
 
-    // Show alert
-    alert('You have been logged out successfully!');
+            // Show alert
+            alert('You have been logged out successfully!');
+        })
+        .catch(function(error) {
+            console.error('Firebase logout error:', error);
+            // Still perform local logout even if Firebase fails
+            sessionStorage.removeItem('kalakarUser');
+            alert('You have been logged out.');
+        });
 }
