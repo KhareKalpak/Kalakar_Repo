@@ -439,9 +439,17 @@ body {
     }
 
     .logo {
-        font-size: 20px;
         flex: 1;
-        text-align: center;
+        justify-content: center;
+    }
+
+    .logo-img {
+        height: 40px;
+        width: 40px;
+    }
+
+    .logo-text {
+        font-size: 18px;
     }
 
     /* Mobile menu styling */
