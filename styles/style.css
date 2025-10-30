@@ -766,6 +766,19 @@ body {
         font-size: 13px;
         padding: 10px 16px;
     }
+
+    .role-selection {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .radio-option {
+        flex: 1;
+    }
+
+    .role-label {
+        font-size: 13px;
+    }
 }
 
 /* ===== UTILITY CLASSES ===== */
