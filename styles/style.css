@@ -376,6 +376,8 @@ body::after {
 
 .hero-content {
     max-width: 800px;
+    position: relative;
+    z-index: 2;
 }
 
 .hero-heading {
