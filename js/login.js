@@ -293,6 +293,14 @@ function handleLoginSubmit(e) {
     const passwordValid = validatePassword(password, 'loginPasswordError');
 
     if (emailValid && passwordValid) {
+        // Store user data in sessionStorage
+        const userData = {
+            email: email,
+            role: 'unknown', // Role not known for existing users on login
+            joinDate: new Date().toLocaleDateString()
+        };
+        sessionStorage.setItem('kalakarUser', JSON.stringify(userData));
+
         showSuccessMessage('Logged in successfully!');
         disableSubmitButton(document.getElementById('loginForm').querySelector('.form-submit-btn'));
     }
