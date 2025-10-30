@@ -383,35 +383,34 @@ function confirmApplication(auditionId, projectTitle, roleTitle, location, portf
         roleTitle: roleTitle,
         location: location,
         actorEmail: user.email,
+        actorId: user.uid,
         portfolio: portfolio,
         appliedDate: new Date().toLocaleDateString(),
+        createdAt: new Date().toISOString(),
         status: 'pending'
     };
 
-    // Save application to actor's applications
-    const applications = JSON.parse(localStorage.getItem('actorApplications') || '[]');
-    applications.push(application);
-    localStorage.setItem('actorApplications', JSON.stringify(applications));
+    // Save application to Firestore
+    db.collection('applications').add(application)
+        .then(function(docRef) {
+            // Also save to localStorage for backward compatibility
+            const applications = JSON.parse(localStorage.getItem('actorApplications') || '[]');
+            applications.push(application);
+            localStorage.setItem('actorApplications', JSON.stringify(applications));
 
-    // Add application to audition's applications (for director's review)
-    const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
-    const auditionIndex = auditions.findIndex(a => a.id == auditionId);
-    if (auditionIndex !== -1) {
-        if (!auditions[auditionIndex].applications) {
-            auditions[auditionIndex].applications = [];
-        }
-        auditions[auditionIndex].applications.push(application);
-        localStorage.setItem('directorAuditions', JSON.stringify(auditions));
-    }
+            // Show success message
+            alert('Application submitted successfully! Directors will review your portfolio.');
 
-    // Show success message
-    alert('Application submitted successfully! Directors will review your portfolio.');
+            // Close modal
+            document.getElementById('applyModal').style.display = 'none';
 
-    // Close modal
-    document.getElementById('applyModal').style.display = 'none';
-
-    // Reload applications
-    loadActorApplications();
+            // Reload applications
+            loadActorApplications(user.uid);
+        })
+        .catch(function(error) {
+            console.error('Error saving application to Firestore:', error);
+            alert('Error submitting application. Please try again.');
+        });
 }
 
 function loadActorApplications() {
