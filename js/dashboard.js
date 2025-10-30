@@ -222,16 +222,30 @@ function validatePortfolioField(value, errorElementId, errorMessage) {
     }
 }
 
-function loadActorPortfolio() {
-    const savedPortfolio = localStorage.getItem('actorPortfolio');
-    if (savedPortfolio) {
-        try {
-            const portfolio = JSON.parse(savedPortfolio);
-            displayActorPortfolio(portfolio);
-        } catch (e) {
-            console.error('Error loading portfolio:', e);
-        }
-    }
+function loadActorPortfolio(userId) {
+    // Load from Firestore
+    db.collection('portfolios').doc(userId).get()
+        .then(function(doc) {
+            if (doc.exists) {
+                const portfolio = doc.data();
+                // Also save to localStorage for backward compatibility
+                localStorage.setItem('actorPortfolio', JSON.stringify(portfolio));
+                displayActorPortfolio(portfolio);
+            }
+        })
+        .catch(function(error) {
+            console.error('Error loading portfolio from Firestore:', error);
+            // Fall back to localStorage
+            const savedPortfolio = localStorage.getItem('actorPortfolio');
+            if (savedPortfolio) {
+                try {
+                    const portfolio = JSON.parse(savedPortfolio);
+                    displayActorPortfolio(portfolio);
+                } catch (e) {
+                    console.error('Error loading portfolio from localStorage:', e);
+                }
+            }
+        });
 }
 
 function displayActorPortfolio(portfolio) {
