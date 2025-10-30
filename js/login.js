@@ -234,16 +234,59 @@ function handleSignupSubmit(e) {
     const roleValid = validateRole(selectedRole);
 
     if (emailValid && contactValid && ageValid && passwordValid && roleValid) {
-        // Store user data in sessionStorage
-        const userData = {
-            email: email,
-            role: selectedRole.value,
-            joinDate: new Date().toLocaleDateString()
-        };
-        sessionStorage.setItem('kalakarUser', JSON.stringify(userData));
+        // Disable submit button and show processing
+        const submitBtn = document.getElementById('signupForm').querySelector('.form-submit-btn');
+        disableSubmitButton(submitBtn);
 
-        showSuccessMessage('Signed in successfully!');
-        disableSubmitButton(document.getElementById('signupForm').querySelector('.form-submit-btn'));
+        // Create user with Firebase Authentication
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then(function(userCredential) {
+                // User created successfully
+                const firebaseUser = userCredential.user;
+
+                // Prepare user data
+                const userData = {
+                    uid: firebaseUser.uid,
+                    email: email,
+                    role: selectedRole.value,
+                    contactNumber: contactNumber,
+                    age: parseInt(age),
+                    joinDate: new Date().toLocaleDateString(),
+                    createdAt: new Date().toISOString()
+                };
+
+                // Store user data in Firestore
+                return db.collection('users').doc(firebaseUser.uid).set(userData);
+            })
+            .then(function() {
+                // Also store in sessionStorage for immediate access
+                const userData = {
+                    email: email,
+                    role: selectedRole.value,
+                    joinDate: new Date().toLocaleDateString()
+                };
+                sessionStorage.setItem('kalakarUser', JSON.stringify(userData));
+
+                showSuccessMessage('Signed in successfully!');
+            })
+            .catch(function(error) {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In';
+
+                // Handle Firebase errors
+                let errorMessage = 'An error occurred. Please try again.';
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'This email is already registered.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Password is too weak. Please use a stronger password.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Invalid email address.';
+                }
+
+                console.error('Firebase signup error:', error);
+                alert('Signup failed: ' + errorMessage);
+            });
     }
 }
 
