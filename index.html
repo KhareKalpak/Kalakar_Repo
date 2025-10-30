@@ -51,7 +51,15 @@
         <a href="#services" class="mobile-nav-link">Services</a>
         <a href="#about" class="mobile-nav-link">About</a>
         <a href="#contact" class="mobile-nav-link">Contact</a>
-        <button class="cta-button mobile-cta">Get Started</button>
+
+        <!-- Get Started Button (shown when not logged in) -->
+        <button class="cta-button mobile-cta" id="mobileGetStartedBtn">Get Started</button>
+
+        <!-- My Account Section (shown when logged in) -->
+        <div class="mobile-my-account" id="mobileMyAccountSection" style="display: none;">
+            <span class="account-email-mobile" id="mobileAccountEmail"></span>
+            <button class="logout-btn mobile-logout" id="mobileLogoutBtn">Logout</button>
+        </div>
     </nav>
 
     <!-- Hero Section -->
