@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Kalakar - User Dashboard">
+    <title>Dashboard - Kalakar</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    <!-- Header with Navigation -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Kalakar</div>
+
+            <!-- Hamburger Menu for Mobile -->
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <!-- Navigation Menu -->
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+            </nav>
+
+            <button class="cta-button header-cta" onclick="window.location.href='index.html'">Back to Home</button>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="menu-overlay"></div>
+
+    <!-- Mobile Slide-out Menu -->
+    <nav class="mobile-menu">
+        <a href="index.html" class="mobile-nav-link">Home</a>
+        <button class="cta-button mobile-cta" onclick="window.location.href='index.html'">Back to Home</button>
+    </nav>
+
+    <!-- Main Dashboard Content -->
+    <main class="dashboard-main">
+        <div class="dashboard-container">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <h1 id="dashboardTitle">Welcome to Your Dashboard</h1>
+                <p id="userInfo"></p>
+                <button class="logout-btn-dashboard" id="logoutBtnDashboard">Logout</button>
+            </div>
+
+            <!-- ACTOR DASHBOARD -->
+            <div id="actorDashboard" class="dashboard-section" style="display: none;">
+                <!-- Profile Section -->
+                <section class="dashboard-card">
+                    <h2>Your Profile</h2>
+                    <div class="profile-info">
+                        <p><strong>Email:</strong> <span id="actorEmail"></span></p>
+                        <p><strong>Role:</strong> <span>Actor</span></p>
+                        <p><strong>Member Since:</strong> <span id="actorJoinDate"></span></p>
+                    </div>
+                </section>
+
+                <!-- Portfolio Builder Section -->
+                <section class="dashboard-card">
+                    <h2>Build Your Portfolio</h2>
+                    <p class="section-subtitle">Create a compelling portfolio to showcase your talent to directors and producers.</p>
+                    <form id="portfolioForm" class="dashboard-form">
+                        <div class="form-group">
+                            <label for="portfolioTitle">Portfolio Title</label>
+                            <input
+                                type="text"
+                                id="portfolioTitle"
+                                placeholder="e.g., My Acting Portfolio"
+                                class="form-input"
+                            />
+                            <span class="error-message" id="portfolioTitleError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="portfolioBio">Bio/About Yourself</label>
+                            <textarea
+                                id="portfolioBio"
+                                placeholder="Write about yourself, your experience, and acting goals..."
+                                class="form-input textarea-input"
+                                rows="4"
+                            ></textarea>
+                            <span class="error-message" id="portfolioBioError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="portfolioExperience">Experience</label>
+                            <textarea
+                                id="portfolioExperience"
+                                placeholder="List your previous roles, plays, or film/TV appearances..."
+                                class="form-input textarea-input"
+                                rows="4"
+                            ></textarea>
+                            <span class="error-message" id="portfolioExperienceError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="portfolioSkills">Skills</label>
+                            <input
+                                type="text"
+                                id="portfolioSkills"
+                                placeholder="e.g., Theatrical acting, Drama, Comedy, Dance"
+                                class="form-input"
+                            />
+                            <span class="error-message" id="portfolioSkillsError"></span>
+                        </div>
+
+                        <button type="submit" class="form-submit-btn">Save Portfolio</button>
+                    </form>
+
+                    <!-- Saved Portfolio Display -->
+                    <div id="savedPortfolio" class="saved-portfolio" style="display: none;">
+                        <h3>Your Saved Portfolio</h3>
+                        <div class="portfolio-display">
+                            <p><strong>Title:</strong> <span id="displayPortfolioTitle"></span></p>
+                            <p><strong>Bio:</strong> <span id="displayPortfolioBio"></span></p>
+                            <p><strong>Experience:</strong> <span id="displayPortfolioExperience"></span></p>
+                            <p><strong>Skills:</strong> <span id="displayPortfolioSkills"></span></p>
+                        </div>
+                        <button class="btn-secondary" id="editPortfolioBtn">Edit Portfolio</button>
+                    </div>
+                </section>
+
+                <!-- Audition Applications Section -->
+                <section class="dashboard-card">
+                    <h2>Your Audition Applications</h2>
+                    <div id="applicationsStatus" class="applications-list">
+                        <p class="empty-message">No audition applications yet. Check back soon!</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- DIRECTOR DASHBOARD -->
+            <div id="directorDashboard" class="dashboard-section" style="display: none;">
+                <!-- Profile Section -->
+                <section class="dashboard-card">
+                    <h2>Your Profile</h2>
+                    <div class="profile-info">
+                        <p><strong>Email:</strong> <span id="directorEmail"></span></p>
+                        <p><strong>Role:</strong> <span>Director/Producer</span></p>
+                        <p><strong>Member Since:</strong> <span id="directorJoinDate"></span></p>
+                    </div>
+                </section>
+
+                <!-- Post Audition Section -->
+                <section class="dashboard-card">
+                    <h2>Post New Audition</h2>
+                    <p class="section-subtitle">Create an audition posting to find talented actors for your project.</p>
+                    <form id="auditionForm" class="dashboard-form">
+                        <div class="form-group">
+                            <label for="projectTitle">Project Title</label>
+                            <input
+                                type="text"
+                                id="projectTitle"
+                                placeholder="e.g., Marathi Drama Series"
+                                class="form-input"
+                            />
+                            <span class="error-message" id="projectTitleError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="roleTitle">Role Title</label>
+                            <input
+                                type="text"
+                                id="roleTitle"
+                                placeholder="e.g., Lead Male/Female, Supporting Actor"
+                                class="form-input"
+                            />
+                            <span class="error-message" id="roleTitleError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="roleDescription">Role Description</label>
+                            <textarea
+                                id="roleDescription"
+                                placeholder="Describe the character, requirements, and what you're looking for..."
+                                class="form-input textarea-input"
+                                rows="4"
+                            ></textarea>
+                            <span class="error-message" id="roleDescriptionError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="auditionLocation">Audition Location</label>
+                            <input
+                                type="text"
+                                id="auditionLocation"
+                                placeholder="e.g., Pune, Mumbai, Online"
+                                class="form-input"
+                            />
+                            <span class="error-message" id="auditionLocationError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="auditionDeadline">Application Deadline</label>
+                            <input
+                                type="date"
+                                id="auditionDeadline"
+                                class="form-input"
+                            />
+                            <span class="error-message" id="auditionDeadlineError"></span>
+                        </div>
+
+                        <button type="submit" class="form-submit-btn">Post Audition</button>
+                    </form>
+                </section>
+
+                <!-- My Auditions Section -->
+                <section class="dashboard-card">
+                    <h2>My Posted Auditions</h2>
+                    <div id="postedAuditions" class="auditions-list">
+                        <p class="empty-message">You haven't posted any auditions yet.</p>
+                    </div>
+                </section>
+
+                <!-- Review Applications Section -->
+                <section class="dashboard-card">
+                    <h2>Review Actor Portfolios</h2>
+                    <div id="reviewApplications" class="review-applications">
+                        <p class="empty-message">No actor applications to review yet.</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Kalakar. All rights reserved. | Connecting Pune's Entertainment Community</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
