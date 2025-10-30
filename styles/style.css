@@ -610,6 +610,8 @@ body::after {
     max-width: 800px;
     margin: 0 auto;
     text-align: center;
+    position: relative;
+    z-index: 2;
 }
 
 .contact-info p {
