@@ -237,6 +237,31 @@
         </div>
     </main>
 
+    <!-- Apply to Audition Modal -->
+    <div id="applyModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal" id="closeModal">&times;</span>
+            <h2>Apply to Audition</h2>
+            <div id="modalAuditionInfo" class="audition-info-modal">
+                <p><strong>Project:</strong> <span id="modalProjectTitle"></span></p>
+                <p><strong>Role:</strong> <span id="modalRoleTitle"></span></p>
+                <p><strong>Location:</strong> <span id="modalLocation"></span></p>
+            </div>
+
+            <div class="portfolio-confirmation">
+                <h3>Your Portfolio</h3>
+                <div id="portfolioToApply" class="portfolio-preview">
+                    <p class="empty-message">Please save your portfolio first before applying!</p>
+                </div>
+            </div>
+
+            <div class="apply-actions">
+                <button type="button" class="btn-submit" id="confirmApplyBtn">Confirm Application</button>
+                <button type="button" class="btn-cancel" id="cancelApplyBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="footer">
         <p>&copy; 2025 Kalakar. All rights reserved. | Connecting Pune's Entertainment Community</p>
