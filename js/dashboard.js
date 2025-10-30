@@ -81,33 +81,50 @@ document.addEventListener('keydown', function(e) {
 
 // ===== MAIN DASHBOARD LOGIC =====
 function loadDashboard() {
-    const userData = sessionStorage.getItem('kalakarUser');
-
-    if (!userData) {
-        // No user session, redirect to login
-        window.location.href = 'login.html';
-        return;
-    }
-
-    try {
-        const user = JSON.parse(userData);
-        const userInfo = document.getElementById('userInfo');
-
-        // Display user info
-        if (userInfo) {
-            userInfo.textContent = `Welcome, ${user.email}!`;
+    // Check Firebase authentication state
+    firebase.auth().onAuthStateChanged(function(firebaseUser) {
+        if (!firebaseUser) {
+            // No user logged in, redirect to login
+            window.location.href = 'login.html';
+            return;
         }
 
-        // Load appropriate dashboard based on role
-        if (user.role === 'actor') {
-            loadActorDashboard(user);
-        } else if (user.role === 'director') {
-            loadDirectorDashboard(user);
-        }
-    } catch (e) {
-        console.error('Error loading dashboard:', e);
-        window.location.href = 'login.html';
-    }
+        // Get user data from Firestore
+        db.collection('users').doc(firebaseUser.uid).get()
+            .then(function(doc) {
+                if (doc.exists) {
+                    const user = doc.data();
+                    const userInfo = document.getElementById('userInfo');
+
+                    // Display user info
+                    if (userInfo) {
+                        userInfo.textContent = `Welcome, ${user.email}!`;
+                    }
+
+                    // Store in sessionStorage for quick access
+                    sessionStorage.setItem('kalakarUser', JSON.stringify({
+                        email: user.email,
+                        role: user.role,
+                        joinDate: user.joinDate,
+                        uid: firebaseUser.uid
+                    }));
+
+                    // Load appropriate dashboard based on role
+                    if (user.role === 'actor') {
+                        loadActorDashboard(user, firebaseUser.uid);
+                    } else if (user.role === 'director') {
+                        loadDirectorDashboard(user, firebaseUser.uid);
+                    }
+                } else {
+                    console.error('User document not found in Firestore');
+                    window.location.href = 'login.html';
+                }
+            })
+            .catch(function(error) {
+                console.error('Error loading user data from Firestore:', error);
+                window.location.href = 'login.html';
+            });
+    });
 }
 
 // ===== ACTOR DASHBOARD =====
