@@ -293,14 +293,24 @@ function handleSignupSubmit(e) {
     const contactNumber = document.getElementById('contactNumber').value;
     const age = document.getElementById('age').value;
     const password = document.getElementById('signupPassword').value;
+    const selectedRole = document.querySelector('input[name="userRole"]:checked');
 
     // Validate all fields
     const emailValid = validateEmail(email, 'signupEmailError');
     const contactValid = validateContactNumber(contactNumber, 'contactNumberError');
     const ageValid = validateAge(age, 'ageError');
     const passwordValid = validatePassword(password, 'signupPasswordError');
+    const roleValid = validateRole(selectedRole);
 
-    if (emailValid && contactValid && ageValid && passwordValid) {
+    if (emailValid && contactValid && ageValid && passwordValid && roleValid) {
+        // Store user data in sessionStorage
+        const userData = {
+            email: email,
+            role: selectedRole.value,
+            joinDate: new Date().toLocaleDateString()
+        };
+        sessionStorage.setItem('kalakarUser', JSON.stringify(userData));
+
         showSuccessMessage('Account created successfully!');
         disableSubmitButton(document.getElementById('signupForm').querySelector('.form-submit-btn'));
     }
