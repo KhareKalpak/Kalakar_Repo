@@ -137,6 +137,12 @@ function loadActorDashboard(user) {
         });
     }
 
+    // Load available auditions
+    loadAvailableAuditions(user);
+
+    // Setup modal
+    setupApplyModal();
+
     // Load audition applications
     loadActorApplications();
 }
