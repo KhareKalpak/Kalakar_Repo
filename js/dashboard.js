@@ -257,30 +257,60 @@ function displayActorPortfolio(portfolio) {
     document.getElementById('displayPortfolioSkills').textContent = portfolio.skills;
 }
 
-function loadAvailableAuditions(user) {
-    const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
+function loadAvailableAuditions(user, userId) {
     const findAuditionsDiv = document.getElementById('findAuditions');
 
-    if (auditions.length === 0) {
-        findAuditionsDiv.innerHTML = '<p class="empty-message">No auditions available right now. Check back soon!</p>';
-    } else {
-        let html = '';
-        auditions.forEach((audition) => {
-            html += `
-                <div class="audition-card-with-apply">
-                    <div class="audition-details">
-                        <h4>${audition.projectTitle}</h4>
-                        <p><strong>Role:</strong> ${audition.roleTitle}</p>
-                        <p><strong>Description:</strong> ${audition.roleDescription}</p>
-                        <p><strong>Location:</strong> ${audition.location}</p>
-                        <p><strong>Deadline:</strong> ${audition.deadline}</p>
-                    </div>
-                    <button class="apply-btn-action" onclick="openApplyModal('${audition.id}', '${audition.projectTitle}', '${audition.roleTitle}', '${audition.location}')">Apply</button>
-                </div>
-            `;
+    // Load auditions from Firestore
+    db.collection('auditions').get()
+        .then(function(querySnapshot) {
+            if (querySnapshot.empty) {
+                findAuditionsDiv.innerHTML = '<p class="empty-message">No auditions available right now. Check back soon!</p>';
+            } else {
+                let html = '';
+                querySnapshot.forEach(function(doc) {
+                    const audition = doc.data();
+                    const auditionId = doc.id;
+                    html += `
+                        <div class="audition-card-with-apply">
+                            <div class="audition-details">
+                                <h4>${audition.projectTitle}</h4>
+                                <p><strong>Role:</strong> ${audition.roleTitle}</p>
+                                <p><strong>Description:</strong> ${audition.roleDescription}</p>
+                                <p><strong>Location:</strong> ${audition.location}</p>
+                                <p><strong>Deadline:</strong> ${audition.deadline}</p>
+                            </div>
+                            <button class="apply-btn-action" onclick="openApplyModal('${auditionId}', '${audition.projectTitle}', '${audition.roleTitle}', '${audition.location}')">Apply</button>
+                        </div>
+                    `;
+                });
+                findAuditionsDiv.innerHTML = html;
+            }
+        })
+        .catch(function(error) {
+            console.error('Error loading auditions from Firestore:', error);
+            // Fall back to localStorage
+            const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
+            if (auditions.length === 0) {
+                findAuditionsDiv.innerHTML = '<p class="empty-message">No auditions available right now. Check back soon!</p>';
+            } else {
+                let html = '';
+                auditions.forEach((audition) => {
+                    html += `
+                        <div class="audition-card-with-apply">
+                            <div class="audition-details">
+                                <h4>${audition.projectTitle}</h4>
+                                <p><strong>Role:</strong> ${audition.roleTitle}</p>
+                                <p><strong>Description:</strong> ${audition.roleDescription}</p>
+                                <p><strong>Location:</strong> ${audition.location}</p>
+                                <p><strong>Deadline:</strong> ${audition.deadline}</p>
+                            </div>
+                            <button class="apply-btn-action" onclick="openApplyModal('${audition.id}', '${audition.projectTitle}', '${audition.roleTitle}', '${audition.location}')">Apply</button>
+                        </div>
+                    `;
+                });
+                findAuditionsDiv.innerHTML = html;
+            }
         });
-        findAuditionsDiv.innerHTML = html;
-    }
 }
 
 function setupApplyModal() {
