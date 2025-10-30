@@ -8,9 +8,10 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeFormToggle();
     initializeFormValidation();
     initializeHamburgerMenuForLogin();
+    setupMobileMenuEventHandlers();
 });
 
-// ===== HAMBURGER MENU FUNCTIONALITY (Reused from landing page) =====
+// ===== HAMBURGER MENU FUNCTIONALITY =====
 function initializeHamburgerMenuForLogin() {
     const hamburger = document.querySelector('.hamburger');
     const mobileMenu = document.querySelector('.mobile-menu');
@@ -44,6 +45,16 @@ function initializeHamburgerMenuForLogin() {
     if (mobileCta) {
         mobileCta.addEventListener('click', function() {
             closeMobileMenu();
+        });
+    }
+}
+
+// Setup additional mobile menu event handlers
+function setupMobileMenuEventHandlers() {
+    const menuElement = document.querySelector('.mobile-menu');
+    if (menuElement) {
+        menuElement.addEventListener('click', function(e) {
+            e.stopPropagation();
         });
     }
 }
@@ -83,16 +94,6 @@ function closeMobileMenu() {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeMobileMenu();
-    }
-});
-
-// Prevent closing when clicking inside mobile menu
-document.addEventListener('DOMContentLoaded', function() {
-    const mobileMenuElement = document.querySelector('.mobile-menu');
-    if (mobileMenuElement) {
-        mobileMenuElement.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
     }
 });
 
