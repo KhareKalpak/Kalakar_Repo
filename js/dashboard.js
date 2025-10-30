@@ -128,7 +128,7 @@ function loadDashboard() {
 }
 
 // ===== ACTOR DASHBOARD =====
-function loadActorDashboard(user) {
+function loadActorDashboard(user, userId) {
     const actorDashboard = document.getElementById('actorDashboard');
     actorDashboard.style.display = 'block';
 
@@ -137,12 +137,14 @@ function loadActorDashboard(user) {
     document.getElementById('actorJoinDate').textContent = user.joinDate;
 
     // Load portfolio if it exists
-    loadActorPortfolio();
+    loadActorPortfolio(userId);
 
     // Setup portfolio form
     const portfolioForm = document.getElementById('portfolioForm');
     if (portfolioForm) {
-        portfolioForm.addEventListener('submit', handlePortfolioSubmit);
+        portfolioForm.addEventListener('submit', function(e) {
+            handlePortfolioSubmit(e, userId);
+        });
     }
 
     // Setup edit button
@@ -155,13 +157,13 @@ function loadActorDashboard(user) {
     }
 
     // Load available auditions
-    loadAvailableAuditions(user);
+    loadAvailableAuditions(user, userId);
 
     // Setup modal
     setupApplyModal();
 
     // Load audition applications
-    loadActorApplications();
+    loadActorApplications(userId);
 }
 
 function handlePortfolioSubmit(e) {
