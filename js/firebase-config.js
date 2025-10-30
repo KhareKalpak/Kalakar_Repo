@@ -20,10 +20,16 @@ var db;
 
 // Wait for Firebase SDK to load, then initialize
 function initializeFirebase() {
-  if (typeof firebase !== 'undefined') {
+  if (typeof firebase !== 'undefined' && firebase.apps) {
     try {
-      // Firebase is loaded, initialize it
-      firebase.initializeApp(firebaseConfig);
+      // Check if Firebase is already initialized
+      if (firebase.apps.length === 0) {
+        // Firebase not initialized yet, initialize it
+        firebase.initializeApp(firebaseConfig);
+        console.log("Firebase initialized for the first time");
+      } else {
+        console.log("Firebase already initialized");
+      }
 
       // Get references to Firebase services
       auth = firebase.auth();
@@ -32,6 +38,10 @@ function initializeFirebase() {
       console.log("Firebase initialized successfully!");
       console.log("auth:", typeof auth);
       console.log("db:", typeof db);
+
+      // Make sure they're also accessible as window properties
+      window.auth = auth;
+      window.db = db;
     } catch (error) {
       console.error("Error initializing Firebase:", error);
     }
