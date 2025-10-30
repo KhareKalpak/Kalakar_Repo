@@ -212,6 +212,133 @@ function displayActorPortfolio(portfolio) {
     document.getElementById('displayPortfolioSkills').textContent = portfolio.skills;
 }
 
+function loadAvailableAuditions(user) {
+    const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
+    const findAuditionsDiv = document.getElementById('findAuditions');
+
+    if (auditions.length === 0) {
+        findAuditionsDiv.innerHTML = '<p class="empty-message">No auditions available right now. Check back soon!</p>';
+    } else {
+        let html = '';
+        auditions.forEach((audition) => {
+            html += `
+                <div class="audition-card-with-apply">
+                    <div class="audition-details">
+                        <h4>${audition.projectTitle}</h4>
+                        <p><strong>Role:</strong> ${audition.roleTitle}</p>
+                        <p><strong>Description:</strong> ${audition.roleDescription}</p>
+                        <p><strong>Location:</strong> ${audition.location}</p>
+                        <p><strong>Deadline:</strong> ${audition.deadline}</p>
+                    </div>
+                    <button class="apply-btn-action" onclick="openApplyModal('${audition.id}', '${audition.projectTitle}', '${audition.roleTitle}', '${audition.location}')">Apply</button>
+                </div>
+            `;
+        });
+        findAuditionsDiv.innerHTML = html;
+    }
+}
+
+function setupApplyModal() {
+    const modal = document.getElementById('applyModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelApplyBtn');
+
+    if (closeModal) {
+        closeModal.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+}
+
+function openApplyModal(auditionId, projectTitle, roleTitle, location) {
+    const modal = document.getElementById('applyModal');
+    const portfolio = JSON.parse(localStorage.getItem('actorPortfolio'));
+
+    // Check if portfolio exists
+    if (!portfolio) {
+        alert('Please save your portfolio first before applying to auditions!');
+        return;
+    }
+
+    // Populate modal with audition details
+    document.getElementById('modalProjectTitle').textContent = projectTitle;
+    document.getElementById('modalRoleTitle').textContent = roleTitle;
+    document.getElementById('modalLocation').textContent = location;
+
+    // Display portfolio
+    const portfolioPreview = document.getElementById('portfolioToApply');
+    portfolioPreview.innerHTML = `
+        <p><strong>Title:</strong> ${portfolio.title}</p>
+        <p><strong>Bio:</strong> ${portfolio.bio}</p>
+        <p><strong>Experience:</strong> ${portfolio.experience || 'Not specified'}</p>
+        <p><strong>Skills:</strong> ${portfolio.skills}</p>
+    `;
+
+    // Setup confirm button
+    const confirmBtn = document.getElementById('confirmApplyBtn');
+    confirmBtn.onclick = function() {
+        confirmApplication(auditionId, projectTitle, roleTitle, location, portfolio);
+    };
+
+    // Show modal
+    modal.style.display = 'block';
+}
+
+function confirmApplication(auditionId, projectTitle, roleTitle, location, portfolio) {
+    const userData = sessionStorage.getItem('kalakarUser');
+    const user = JSON.parse(userData);
+
+    // Create application object
+    const application = {
+        auditionId: auditionId,
+        projectTitle: projectTitle,
+        roleTitle: roleTitle,
+        location: location,
+        actorEmail: user.email,
+        portfolio: portfolio,
+        appliedDate: new Date().toLocaleDateString(),
+        status: 'pending'
+    };
+
+    // Save application to actor's applications
+    const applications = JSON.parse(localStorage.getItem('actorApplications') || '[]');
+    applications.push(application);
+    localStorage.setItem('actorApplications', JSON.stringify(applications));
+
+    // Add application to audition's applications (for director's review)
+    const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
+    const auditionIndex = auditions.findIndex(a => a.id == auditionId);
+    if (auditionIndex !== -1) {
+        if (!auditions[auditionIndex].applications) {
+            auditions[auditionIndex].applications = [];
+        }
+        auditions[auditionIndex].applications.push(application);
+        localStorage.setItem('directorAuditions', JSON.stringify(auditions));
+    }
+
+    // Show success message
+    alert('Application submitted successfully! Directors will review your portfolio.');
+
+    // Close modal
+    document.getElementById('applyModal').style.display = 'none';
+
+    // Reload applications
+    loadActorApplications();
+}
+
 function loadActorApplications() {
     const applications = JSON.parse(localStorage.getItem('actorApplications') || '[]');
     const applicationsDiv = document.getElementById('applicationsStatus');
