@@ -166,7 +166,7 @@ function loadActorDashboard(user, userId) {
     loadActorApplications(userId);
 }
 
-function handlePortfolioSubmit(e) {
+function handlePortfolioSubmit(e, userId) {
     e.preventDefault();
 
     const title = document.getElementById('portfolioTitle').value;
@@ -181,21 +181,33 @@ function handlePortfolioSubmit(e) {
     isValid &= validatePortfolioField(skills, 'portfolioSkillsError', 'Please enter your skills');
 
     if (isValid) {
-        // Save to localStorage
+        // Create portfolio object
         const portfolio = {
+            userId: userId,
             title: title,
             bio: bio,
             experience: experience,
             skills: skills,
-            savedDate: new Date().toLocaleDateString()
+            savedDate: new Date().toLocaleDateString(),
+            updatedAt: new Date().toISOString()
         };
-        localStorage.setItem('actorPortfolio', JSON.stringify(portfolio));
 
-        // Show success message
-        alert('Portfolio saved successfully!');
+        // Save to Firestore
+        db.collection('portfolios').doc(userId).set(portfolio)
+            .then(function() {
+                // Also save to localStorage for backward compatibility
+                localStorage.setItem('actorPortfolio', JSON.stringify(portfolio));
 
-        // Display saved portfolio
-        displayActorPortfolio(portfolio);
+                // Show success message
+                alert('Portfolio saved successfully!');
+
+                // Display saved portfolio
+                displayActorPortfolio(portfolio);
+            })
+            .catch(function(error) {
+                console.error('Error saving portfolio to Firestore:', error);
+                alert('Error saving portfolio. Please try again.');
+            });
     }
 }
 
