@@ -447,6 +447,8 @@ body::after {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 25px;
+    position: relative;
+    z-index: 2;
 }
 
 .service-card {
