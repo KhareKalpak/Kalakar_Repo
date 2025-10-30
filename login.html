@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Kalakar - Login and Registration">
+    <title>Login / Sign Up - Kalakar</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    <!-- Header with Navigation -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Kalakar</div>
+
+            <!-- Hamburger Menu for Mobile -->
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <!-- Navigation Menu -->
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+            </nav>
+
+            <button class="cta-button header-cta" onclick="window.location.href='index.html'">Back to Home</button>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="menu-overlay"></div>
+
+    <!-- Mobile Slide-out Menu -->
+    <nav class="mobile-menu">
+        <a href="index.html" class="mobile-nav-link">Home</a>
+        <button class="cta-button mobile-cta" onclick="window.location.href='index.html'">Back to Home</button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="login-main">
+        <div class="login-container">
+            <!-- Success Message -->
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+
+            <!-- Toggle Buttons -->
+            <div class="form-toggle">
+                <button class="toggle-btn active" data-form="login">Login</button>
+                <button class="toggle-btn" data-form="signup">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <input
+                        type="email"
+                        id="loginEmail"
+                        name="email"
+                        placeholder="your@email.com"
+                        class="form-input"
+                    />
+                    <span class="error-message" id="loginEmailError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input
+                        type="password"
+                        id="loginPassword"
+                        name="password"
+                        placeholder="Enter your password"
+                        class="form-input"
+                    />
+                    <span class="error-message" id="loginPasswordError"></span>
+                </div>
+
+                <button type="submit" class="form-submit-btn">Sign In</button>
+            </form>
+
+            <!-- Sign Up Form -->
+            <form id="signupForm" class="auth-form">
+                <div class="form-group">
+                    <label for="signupEmail">Email Address</label>
+                    <input
+                        type="email"
+                        id="signupEmail"
+                        name="email"
+                        placeholder="your@email.com"
+                        class="form-input"
+                    />
+                    <span class="error-message" id="signupEmailError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="contactNumber">Contact Number</label>
+                    <input
+                        type="tel"
+                        id="contactNumber"
+                        name="contact"
+                        placeholder="+91 xxxxx xxxxx"
+                        class="form-input"
+                    />
+                    <span class="error-message" id="contactNumberError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="age">Age</label>
+                    <input
+                        type="number"
+                        id="age"
+                        name="age"
+                        placeholder="18"
+                        class="form-input"
+                        min="1"
+                    />
+                    <span class="error-message" id="ageError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="signupPassword">Create Password</label>
+                    <input
+                        type="password"
+                        id="signupPassword"
+                        name="password"
+                        placeholder="Create a strong password"
+                        class="form-input"
+                    />
+                    <span class="error-message" id="signupPasswordError"></span>
+                </div>
+
+                <button type="submit" class="form-submit-btn">Create Account</button>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Kalakar. All rights reserved. | Connecting Pune's Entertainment Community</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/login.js"></script>
+</body>
+</html>
