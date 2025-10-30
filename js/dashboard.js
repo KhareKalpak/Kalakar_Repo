@@ -463,7 +463,7 @@ function loadActorApplications(userId) {
 }
 
 // ===== DIRECTOR DASHBOARD =====
-function loadDirectorDashboard(user) {
+function loadDirectorDashboard(user, userId) {
     const directorDashboard = document.getElementById('directorDashboard');
     directorDashboard.style.display = 'block';
 
@@ -474,14 +474,16 @@ function loadDirectorDashboard(user) {
     // Setup audition form
     const auditionForm = document.getElementById('auditionForm');
     if (auditionForm) {
-        auditionForm.addEventListener('submit', handleAuditionSubmit);
+        auditionForm.addEventListener('submit', function(e) {
+            handleAuditionSubmit(e, userId);
+        });
     }
 
     // Load posted auditions
-    loadPostedAuditions();
+    loadPostedAuditions(userId);
 
     // Load applications for review
-    loadApplicationsForReview();
+    loadApplicationsForReview(userId);
 }
 
 function handleAuditionSubmit(e) {
