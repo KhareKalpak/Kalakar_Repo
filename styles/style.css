@@ -52,10 +52,22 @@ body {
 }
 
 .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+}
+
+.logo-img {
+    height: 50px;
+    width: 50px;
+    display: block;
+}
+
+.logo-text {
     font-size: 24px;
     font-weight: bold;
     color: #0099cc;
-    white-space: nowrap;
 }
 
 .nav-menu {
