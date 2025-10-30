@@ -427,17 +427,9 @@ body {
     }
 
     .logo {
+        font-size: 20px;
         flex: 1;
-        justify-content: center;
-    }
-
-    .logo-img {
-        height: 40px;
-        width: 40px;
-    }
-
-    .logo-text {
-        font-size: 18px;
+        text-align: center;
     }
 
     /* Mobile menu styling */
