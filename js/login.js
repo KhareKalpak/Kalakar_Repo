@@ -242,7 +242,7 @@ function handleSignupSubmit(e) {
         };
         sessionStorage.setItem('kalakarUser', JSON.stringify(userData));
 
-        showSuccessMessage('Account created successfully!');
+        showSuccessMessage('Signed in successfully!');
         disableSubmitButton(document.getElementById('signupForm').querySelector('.form-submit-btn'));
     }
 }
