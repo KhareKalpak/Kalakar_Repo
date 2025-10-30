@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeHamburgerMenu();
     initializeSmoothScroll();
     initializeGetStartedButtons();
+    checkUserSession();
+    initializeLogoutButtons();
 });
 
 // ===== HAMBURGER MENU FUNCTIONALITY =====
