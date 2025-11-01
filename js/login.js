@@ -238,55 +238,35 @@ function handleSignupSubmit(e) {
         const submitBtn = document.getElementById('signupForm').querySelector('.form-submit-btn');
         disableSubmitButton(submitBtn);
 
-        // Create user with Firebase Authentication
-        firebase.auth().createUserWithEmailAndPassword(email, password)
-            .then(function(userCredential) {
-                // User created successfully
-                const firebaseUser = userCredential.user;
+        // Prepare user data
+        const userData = {
+            email: email,
+            role: selectedRole.value,
+            contactNumber: contactNumber,
+            age: parseInt(age),
+            joinDate: new Date().toLocaleDateString(),
+            createdAt: new Date().toISOString()
+        };
 
-                // Prepare user data
-                const userData = {
-                    uid: firebaseUser.uid,
-                    email: email,
-                    role: selectedRole.value,
-                    contactNumber: contactNumber,
-                    age: parseInt(age),
-                    joinDate: new Date().toLocaleDateString(),
-                    createdAt: new Date().toISOString()
-                };
+        // Store user data in sessionStorage
+        sessionStorage.setItem('kalakarUser', JSON.stringify(userData));
 
-                // Store user data in Firestore
-                return db.collection('users').doc(firebaseUser.uid).set(userData);
-            })
-            .then(function() {
-                // Also store in sessionStorage for immediate access
-                const userData = {
-                    email: email,
-                    role: selectedRole.value,
-                    joinDate: new Date().toLocaleDateString()
-                };
-                sessionStorage.setItem('kalakarUser', JSON.stringify(userData));
+        // Also store in localStorage for persistence
+        const users = JSON.parse(localStorage.getItem('kalakarUsers') || '[]');
 
-                showSuccessMessage('Signed in successfully!');
-            })
-            .catch(function(error) {
-                // Re-enable submit button
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Sign In';
+        // Check if email already exists
+        const existingUser = users.find(user => user.email === email);
+        if (existingUser) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign In';
+            alert('This email is already registered.');
+            return;
+        }
 
-                // Handle Firebase errors
-                let errorMessage = 'An error occurred. Please try again.';
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = 'This email is already registered.';
-                } else if (error.code === 'auth/weak-password') {
-                    errorMessage = 'Password is too weak. Please use a stronger password.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = 'Invalid email address.';
-                }
+        users.push(userData);
+        localStorage.setItem('kalakarUsers', JSON.stringify(users));
 
-                console.error('Firebase signup error:', error);
-                alert('Signup failed: ' + errorMessage);
-            });
+        showSuccessMessage('Signed in successfully!');
     }
 }
 
