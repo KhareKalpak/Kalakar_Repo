@@ -81,54 +81,38 @@ document.addEventListener('keydown', function(e) {
 
 // ===== MAIN DASHBOARD LOGIC =====
 function loadDashboard() {
-    // Check Firebase authentication state
-    firebase.auth().onAuthStateChanged(function(firebaseUser) {
-        if (!firebaseUser) {
-            // No user logged in, redirect to login
-            window.location.href = 'login.html';
-            return;
+    // Check sessionStorage for user
+    const userData = sessionStorage.getItem('kalakarUser');
+
+    if (!userData) {
+        // No user logged in, redirect to login
+        window.location.href = 'login.html';
+        return;
+    }
+
+    try {
+        const user = JSON.parse(userData);
+        const userInfo = document.getElementById('userInfo');
+
+        // Display user info
+        if (userInfo) {
+            userInfo.textContent = `Welcome, ${user.email}!`;
         }
 
-        // Get user data from Firestore
-        db.collection('users').doc(firebaseUser.uid).get()
-            .then(function(doc) {
-                if (doc.exists) {
-                    const user = doc.data();
-                    const userInfo = document.getElementById('userInfo');
-
-                    // Display user info
-                    if (userInfo) {
-                        userInfo.textContent = `Welcome, ${user.email}!`;
-                    }
-
-                    // Store in sessionStorage for quick access
-                    sessionStorage.setItem('kalakarUser', JSON.stringify({
-                        email: user.email,
-                        role: user.role,
-                        joinDate: user.joinDate,
-                        uid: firebaseUser.uid
-                    }));
-
-                    // Load appropriate dashboard based on role
-                    if (user.role === 'actor') {
-                        loadActorDashboard(user, firebaseUser.uid);
-                    } else if (user.role === 'director') {
-                        loadDirectorDashboard(user, firebaseUser.uid);
-                    }
-                } else {
-                    console.error('User document not found in Firestore');
-                    window.location.href = 'login.html';
-                }
-            })
-            .catch(function(error) {
-                console.error('Error loading user data from Firestore:', error);
-                window.location.href = 'login.html';
-            });
-    });
+        // Load appropriate dashboard based on role
+        if (user.role === 'actor') {
+            loadActorDashboard(user);
+        } else if (user.role === 'director') {
+            loadDirectorDashboard(user);
+        }
+    } catch (e) {
+        console.error('Error parsing user data:', e);
+        window.location.href = 'login.html';
+    }
 }
 
 // ===== ACTOR DASHBOARD =====
-function loadActorDashboard(user, userId) {
+function loadActorDashboard(user) {
     const actorDashboard = document.getElementById('actorDashboard');
     actorDashboard.style.display = 'block';
 
@@ -137,13 +121,13 @@ function loadActorDashboard(user, userId) {
     document.getElementById('actorJoinDate').textContent = user.joinDate;
 
     // Load portfolio if it exists
-    loadActorPortfolio(userId);
+    loadActorPortfolio(user.email);
 
     // Setup portfolio form
     const portfolioForm = document.getElementById('portfolioForm');
     if (portfolioForm) {
         portfolioForm.addEventListener('submit', function(e) {
-            handlePortfolioSubmit(e, userId);
+            handlePortfolioSubmit(e, user.email);
         });
     }
 
@@ -157,16 +141,16 @@ function loadActorDashboard(user, userId) {
     }
 
     // Load available auditions
-    loadAvailableAuditions(user, userId);
+    loadAvailableAuditions(user);
 
     // Setup modal
     setupApplyModal();
 
     // Load audition applications
-    loadActorApplications(userId);
+    loadActorApplications(user.email);
 }
 
-function handlePortfolioSubmit(e, userId) {
+function handlePortfolioSubmit(e, userEmail) {
     e.preventDefault();
 
     const title = document.getElementById('portfolioTitle').value;
@@ -183,7 +167,7 @@ function handlePortfolioSubmit(e, userId) {
     if (isValid) {
         // Create portfolio object
         const portfolio = {
-            userId: userId,
+            userEmail: userEmail,
             title: title,
             bio: bio,
             experience: experience,
@@ -192,22 +176,16 @@ function handlePortfolioSubmit(e, userId) {
             updatedAt: new Date().toISOString()
         };
 
-        // Save to Firestore
-        db.collection('portfolios').doc(userId).set(portfolio)
-            .then(function() {
-                // Also save to localStorage for backward compatibility
-                localStorage.setItem('actorPortfolio', JSON.stringify(portfolio));
+        // Save to localStorage
+        const portfolios = JSON.parse(localStorage.getItem('actorPortfolios') || '{}');
+        portfolios[userEmail] = portfolio;
+        localStorage.setItem('actorPortfolios', JSON.stringify(portfolios));
 
-                // Show success message
-                alert('Portfolio saved successfully!');
+        // Show success message
+        alert('Portfolio saved successfully!');
 
-                // Display saved portfolio
-                displayActorPortfolio(portfolio);
-            })
-            .catch(function(error) {
-                console.error('Error saving portfolio to Firestore:', error);
-                alert('Error saving portfolio. Please try again.');
-            });
+        // Display saved portfolio
+        displayActorPortfolio(portfolio);
     }
 }
 
@@ -222,30 +200,13 @@ function validatePortfolioField(value, errorElementId, errorMessage) {
     }
 }
 
-function loadActorPortfolio(userId) {
-    // Load from Firestore
-    db.collection('portfolios').doc(userId).get()
-        .then(function(doc) {
-            if (doc.exists) {
-                const portfolio = doc.data();
-                // Also save to localStorage for backward compatibility
-                localStorage.setItem('actorPortfolio', JSON.stringify(portfolio));
-                displayActorPortfolio(portfolio);
-            }
-        })
-        .catch(function(error) {
-            console.error('Error loading portfolio from Firestore:', error);
-            // Fall back to localStorage
-            const savedPortfolio = localStorage.getItem('actorPortfolio');
-            if (savedPortfolio) {
-                try {
-                    const portfolio = JSON.parse(savedPortfolio);
-                    displayActorPortfolio(portfolio);
-                } catch (e) {
-                    console.error('Error loading portfolio from localStorage:', e);
-                }
-            }
-        });
+function loadActorPortfolio(userEmail) {
+    const portfolios = JSON.parse(localStorage.getItem('actorPortfolios') || '{}');
+    const portfolio = portfolios[userEmail];
+
+    if (portfolio) {
+        displayActorPortfolio(portfolio);
+    }
 }
 
 function displayActorPortfolio(portfolio) {
@@ -257,60 +218,32 @@ function displayActorPortfolio(portfolio) {
     document.getElementById('displayPortfolioSkills').textContent = portfolio.skills;
 }
 
-function loadAvailableAuditions(user, userId) {
+function loadAvailableAuditions(user) {
     const findAuditionsDiv = document.getElementById('findAuditions');
 
-    // Load auditions from Firestore
-    db.collection('auditions').get()
-        .then(function(querySnapshot) {
-            if (querySnapshot.empty) {
-                findAuditionsDiv.innerHTML = '<p class="empty-message">No auditions available right now. Check back soon!</p>';
-            } else {
-                let html = '';
-                querySnapshot.forEach(function(doc) {
-                    const audition = doc.data();
-                    const auditionId = doc.id;
-                    html += `
-                        <div class="audition-card-with-apply">
-                            <div class="audition-details">
-                                <h4>${audition.projectTitle}</h4>
-                                <p><strong>Role:</strong> ${audition.roleTitle}</p>
-                                <p><strong>Description:</strong> ${audition.roleDescription}</p>
-                                <p><strong>Location:</strong> ${audition.location}</p>
-                                <p><strong>Deadline:</strong> ${audition.deadline}</p>
-                            </div>
-                            <button class="apply-btn-action" onclick="openApplyModal('${auditionId}', '${audition.projectTitle}', '${audition.roleTitle}', '${audition.location}')">Apply</button>
-                        </div>
-                    `;
-                });
-                findAuditionsDiv.innerHTML = html;
-            }
-        })
-        .catch(function(error) {
-            console.error('Error loading auditions from Firestore:', error);
-            // Fall back to localStorage
-            const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
-            if (auditions.length === 0) {
-                findAuditionsDiv.innerHTML = '<p class="empty-message">No auditions available right now. Check back soon!</p>';
-            } else {
-                let html = '';
-                auditions.forEach((audition) => {
-                    html += `
-                        <div class="audition-card-with-apply">
-                            <div class="audition-details">
-                                <h4>${audition.projectTitle}</h4>
-                                <p><strong>Role:</strong> ${audition.roleTitle}</p>
-                                <p><strong>Description:</strong> ${audition.roleDescription}</p>
-                                <p><strong>Location:</strong> ${audition.location}</p>
-                                <p><strong>Deadline:</strong> ${audition.deadline}</p>
-                            </div>
-                            <button class="apply-btn-action" onclick="openApplyModal('${audition.id}', '${audition.projectTitle}', '${audition.roleTitle}', '${audition.location}')">Apply</button>
-                        </div>
-                    `;
-                });
-                findAuditionsDiv.innerHTML = html;
-            }
+    // Load auditions from localStorage
+    const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
+
+    if (auditions.length === 0) {
+        findAuditionsDiv.innerHTML = '<p class="empty-message">No auditions available right now. Check back soon!</p>';
+    } else {
+        let html = '';
+        auditions.forEach((audition, index) => {
+            html += `
+                <div class="audition-card-with-apply">
+                    <div class="audition-details">
+                        <h4>${audition.projectTitle}</h4>
+                        <p><strong>Role:</strong> ${audition.roleTitle}</p>
+                        <p><strong>Description:</strong> ${audition.roleDescription}</p>
+                        <p><strong>Location:</strong> ${audition.location}</p>
+                        <p><strong>Deadline:</strong> ${audition.deadline}</p>
+                    </div>
+                    <button class="apply-btn-action" onclick="openApplyModal(${index}, '${audition.projectTitle}', '${audition.roleTitle}', '${audition.location}')">Apply</button>
+                </div>
+            `;
         });
+        findAuditionsDiv.innerHTML = html;
+    }
 }
 
 function setupApplyModal() {
@@ -338,9 +271,14 @@ function setupApplyModal() {
     });
 }
 
-function openApplyModal(auditionId, projectTitle, roleTitle, location) {
+function openApplyModal(auditionIndex, projectTitle, roleTitle, location) {
     const modal = document.getElementById('applyModal');
-    const portfolio = JSON.parse(localStorage.getItem('actorPortfolio'));
+    const userData = sessionStorage.getItem('kalakarUser');
+    const user = JSON.parse(userData);
+
+    // Get portfolio from localStorage
+    const portfolios = JSON.parse(localStorage.getItem('actorPortfolios') || '{}');
+    const portfolio = portfolios[user.email];
 
     // Check if portfolio exists
     if (!portfolio) {
@@ -365,105 +303,83 @@ function openApplyModal(auditionId, projectTitle, roleTitle, location) {
     // Setup confirm button
     const confirmBtn = document.getElementById('confirmApplyBtn');
     confirmBtn.onclick = function() {
-        confirmApplication(auditionId, projectTitle, roleTitle, location, portfolio);
+        confirmApplication(auditionIndex, projectTitle, roleTitle, location, portfolio);
     };
 
     // Show modal
     modal.style.display = 'block';
 }
 
-function confirmApplication(auditionId, projectTitle, roleTitle, location, portfolio) {
+function confirmApplication(auditionIndex, projectTitle, roleTitle, location, portfolio) {
     const userData = sessionStorage.getItem('kalakarUser');
     const user = JSON.parse(userData);
 
     // Create application object
     const application = {
-        auditionId: auditionId,
+        auditionIndex: auditionIndex,
         projectTitle: projectTitle,
         roleTitle: roleTitle,
         location: location,
         actorEmail: user.email,
-        actorId: user.uid,
         portfolio: portfolio,
         appliedDate: new Date().toLocaleDateString(),
         createdAt: new Date().toISOString(),
         status: 'pending'
     };
 
-    // Save application to Firestore
-    db.collection('applications').add(application)
-        .then(function(docRef) {
-            // Also save to localStorage for backward compatibility
-            const applications = JSON.parse(localStorage.getItem('actorApplications') || '[]');
-            applications.push(application);
-            localStorage.setItem('actorApplications', JSON.stringify(applications));
+    // Save application to localStorage
+    const applications = JSON.parse(localStorage.getItem('actorApplications') || '[]');
+    applications.push(application);
+    localStorage.setItem('actorApplications', JSON.stringify(applications));
 
-            // Show success message
-            alert('Application submitted successfully! Directors will review your portfolio.');
+    // Also add application to the audition
+    const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
+    if (auditions[auditionIndex]) {
+        if (!auditions[auditionIndex].applications) {
+            auditions[auditionIndex].applications = [];
+        }
+        auditions[auditionIndex].applications.push(application);
+        localStorage.setItem('directorAuditions', JSON.stringify(auditions));
+    }
 
-            // Close modal
-            document.getElementById('applyModal').style.display = 'none';
+    // Show success message
+    alert('Application submitted successfully! Directors will review your portfolio.');
 
-            // Reload applications
-            loadActorApplications(user.uid);
-        })
-        .catch(function(error) {
-            console.error('Error saving application to Firestore:', error);
-            alert('Error submitting application. Please try again.');
-        });
+    // Close modal
+    document.getElementById('applyModal').style.display = 'none';
+
+    // Reload applications
+    loadActorApplications(user.email);
 }
 
-function loadActorApplications(userId) {
+function loadActorApplications(userEmail) {
     const applicationsDiv = document.getElementById('applicationsStatus');
 
-    // Load applications from Firestore
-    db.collection('applications').where('actorId', '==', userId).get()
-        .then(function(querySnapshot) {
-            if (querySnapshot.empty) {
-                applicationsDiv.innerHTML = '<p class="empty-message">No audition applications yet. Check back soon!</p>';
-            } else {
-                let html = '';
-                querySnapshot.forEach(function(doc) {
-                    const app = doc.data();
-                    html += `
-                        <div class="application-card">
-                            <h4>${app.projectTitle}</h4>
-                            <p><strong>Role:</strong> ${app.roleTitle}</p>
-                            <p><strong>Location:</strong> ${app.location}</p>
-                            <p><strong>Status:</strong> <span class="status-${app.status}">${app.status.toUpperCase()}</span></p>
-                            <p><strong>Applied on:</strong> ${app.appliedDate}</p>
-                        </div>
-                    `;
-                });
-                applicationsDiv.innerHTML = html;
-            }
-        })
-        .catch(function(error) {
-            console.error('Error loading applications from Firestore:', error);
-            // Fall back to localStorage
-            const applications = JSON.parse(localStorage.getItem('actorApplications') || '[]');
-            if (applications.length === 0) {
-                applicationsDiv.innerHTML = '<p class="empty-message">No audition applications yet. Check back soon!</p>';
-            } else {
-                let html = '';
-                applications.forEach((app, index) => {
-                    html += `
-                        <div class="application-card">
-                            <h4>${app.projectTitle}</h4>
-                            <p><strong>Role:</strong> ${app.roleTitle}</p>
-                            <p><strong>Location:</strong> ${app.location}</p>
-                            <p><strong>Status:</strong> <span class="status-${app.status}">${app.status.toUpperCase()}</span></p>
-                            <p><strong>Applied on:</strong> ${app.appliedDate}</p>
-                        </div>
-                    `;
-                });
-                applicationsDiv.innerHTML = html;
-            }
+    // Load applications from localStorage
+    const applications = JSON.parse(localStorage.getItem('actorApplications') || '[]');
+    const userApplications = applications.filter(app => app.actorEmail === userEmail);
+
+    if (userApplications.length === 0) {
+        applicationsDiv.innerHTML = '<p class="empty-message">No audition applications yet. Check back soon!</p>';
+    } else {
+        let html = '';
+        userApplications.forEach((app) => {
+            html += `
+                <div class="application-card">
+                    <h4>${app.projectTitle}</h4>
+                    <p><strong>Role:</strong> ${app.roleTitle}</p>
+                    <p><strong>Location:</strong> ${app.location}</p>
+                    <p><strong>Status:</strong> <span class="status-${app.status}">${app.status.toUpperCase()}</span></p>
+                    <p><strong>Applied on:</strong> ${app.appliedDate}</p>
+                </div>
+            `;
         });
+        applicationsDiv.innerHTML = html;
+    }
 }
 
 // ===== DIRECTOR DASHBOARD =====
-function loadDirectorDashboard(user, userId) {
+function loadDirectorDashboard(user) {
     const directorDashboard = document.getElementById('directorDashboard');
     directorDashboard.style.display = 'block';
 
@@ -475,18 +391,18 @@ function loadDirectorDashboard(user, userId) {
     const auditionForm = document.getElementById('auditionForm');
     if (auditionForm) {
         auditionForm.addEventListener('submit', function(e) {
-            handleAuditionSubmit(e, userId);
+            handleAuditionSubmit(e, user.email);
         });
     }
 
     // Load posted auditions
-    loadPostedAuditions(userId);
+    loadPostedAuditions(user.email);
 
     // Load applications for review
-    loadApplicationsForReview(userId);
+    loadApplicationsForReview(user.email);
 }
 
-function handleAuditionSubmit(e, userId) {
+function handleAuditionSubmit(e, userEmail) {
     e.preventDefault();
 
     const projectTitle = document.getElementById('projectTitle').value;
@@ -506,38 +422,30 @@ function handleAuditionSubmit(e, userId) {
     if (isValid) {
         // Create audition object
         const audition = {
-            directorId: userId,
+            directorEmail: userEmail,
             projectTitle: projectTitle,
             roleTitle: roleTitle,
             roleDescription: roleDescription,
             location: location,
             deadline: deadline,
             postedDate: new Date().toLocaleDateString(),
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            applications: []
         };
 
-        // Save to Firestore
-        db.collection('auditions').add(audition)
-            .then(function(docRef) {
-                // Also save to localStorage for backward compatibility
-                audition.id = docRef.id;
-                const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
-                auditions.push(audition);
-                localStorage.setItem('directorAuditions', JSON.stringify(auditions));
+        // Save to localStorage
+        const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
+        auditions.push(audition);
+        localStorage.setItem('directorAuditions', JSON.stringify(auditions));
 
-                // Reset form
-                document.getElementById('auditionForm').reset();
+        // Reset form
+        document.getElementById('auditionForm').reset();
 
-                // Show success message
-                alert('Audition posted successfully!');
+        // Show success message
+        alert('Audition posted successfully!');
 
-                // Reload auditions list
-                loadPostedAuditions(userId);
-            })
-            .catch(function(error) {
-                console.error('Error saving audition to Firestore:', error);
-                alert('Error posting audition. Please try again.');
-            });
+        // Reload auditions list
+        loadPostedAuditions(userEmail);
     }
 }
 
@@ -552,184 +460,92 @@ function validateAuditionField(value, errorElementId, errorMessage) {
     }
 }
 
-function loadPostedAuditions(userId) {
+function loadPostedAuditions(userEmail) {
     const auditionsDiv = document.getElementById('postedAuditions');
 
-    // Load auditions from Firestore for this director
-    db.collection('auditions').where('directorId', '==', userId).get()
-        .then(function(querySnapshot) {
-            if (querySnapshot.empty) {
-                auditionsDiv.innerHTML = '<p class="empty-message">You haven\'t posted any auditions yet.</p>';
-            } else {
-                let html = '';
-                querySnapshot.forEach(function(doc) {
-                    const audition = doc.data();
-                    // Count applications for this audition
-                    db.collection('applications').where('auditionId', '==', doc.id).get()
-                        .then(function(appSnapshot) {
-                            const appCount = appSnapshot.size;
-                            // Note: This will update counts as they load, not ideal but works for now
-                        });
+    // Load auditions from localStorage
+    const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
+    const userAuditions = auditions.filter(audition => audition.directorEmail === userEmail);
 
-                    html += `
-                        <div class="audition-card">
-                            <div class="audition-header">
-                                <h4>${audition.projectTitle}</h4>
-                                <span class="audition-role">${audition.roleTitle}</span>
-                            </div>
-                            <p><strong>Description:</strong> ${audition.roleDescription}</p>
-                            <p><strong>Location:</strong> ${audition.location}</p>
-                            <p><strong>Deadline:</strong> ${audition.deadline}</p>
-                            <p><strong>Posted:</strong> ${audition.postedDate}</p>
-                        </div>
-                    `;
-                });
-                auditionsDiv.innerHTML = html;
-            }
-        })
-        .catch(function(error) {
-            console.error('Error loading posted auditions from Firestore:', error);
-            // Fall back to localStorage
-            const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
-            if (auditions.length === 0) {
-                auditionsDiv.innerHTML = '<p class="empty-message">You haven\'t posted any auditions yet.</p>';
-            } else {
-                let html = '';
-                auditions.forEach((audition) => {
-                    html += `
-                        <div class="audition-card">
-                            <div class="audition-header">
-                                <h4>${audition.projectTitle}</h4>
-                                <span class="audition-role">${audition.roleTitle}</span>
-                            </div>
-                            <p><strong>Description:</strong> ${audition.roleDescription}</p>
-                            <p><strong>Location:</strong> ${audition.location}</p>
-                            <p><strong>Deadline:</strong> ${audition.deadline}</p>
-                            <p><strong>Posted:</strong> ${audition.postedDate}</p>
-                            <p><strong>Applications:</strong> <span class="app-count">${audition.applications ? audition.applications.length : 0}</span></p>
-                        </div>
-                    `;
-                });
-                auditionsDiv.innerHTML = html;
-            }
+    if (userAuditions.length === 0) {
+        auditionsDiv.innerHTML = '<p class="empty-message">You haven\'t posted any auditions yet.</p>';
+    } else {
+        let html = '';
+        userAuditions.forEach((audition) => {
+            const appCount = audition.applications ? audition.applications.length : 0;
+            html += `
+                <div class="audition-card">
+                    <div class="audition-header">
+                        <h4>${audition.projectTitle}</h4>
+                        <span class="audition-role">${audition.roleTitle}</span>
+                    </div>
+                    <p><strong>Description:</strong> ${audition.roleDescription}</p>
+                    <p><strong>Location:</strong> ${audition.location}</p>
+                    <p><strong>Deadline:</strong> ${audition.deadline}</p>
+                    <p><strong>Posted:</strong> ${audition.postedDate}</p>
+                    <p><strong>Applications:</strong> <span class="app-count">${appCount}</span></p>
+                </div>
+            `;
         });
+        auditionsDiv.innerHTML = html;
+    }
 }
 
-function loadApplicationsForReview(userId) {
+function loadApplicationsForReview(userEmail) {
     const reviewDiv = document.getElementById('reviewApplications');
 
-    // Load auditions for this director
-    db.collection('auditions').where('directorId', '==', userId).get()
-        .then(function(auditionSnapshot) {
-            let html = '';
-            let totalApplications = 0;
+    // Load auditions from localStorage
+    const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
+    const userAuditions = auditions.filter(audition => audition.directorEmail === userEmail);
 
-            auditionSnapshot.forEach(function(auditionDoc) {
-                const audition = auditionDoc.data();
-                const auditionId = auditionDoc.id;
+    let totalApplications = 0;
+    let html = '';
 
-                // Load applications for this audition
-                db.collection('applications').where('auditionId', '==', auditionId).get()
-                    .then(function(appSnapshot) {
-                        if (appSnapshot.size > 0) {
-                            html += `
-                                <div class="review-section">
-                                    <h4>${audition.projectTitle} - ${audition.roleTitle}</h4>
-                                    <div class="applications-to-review">
-                            `;
+    userAuditions.forEach((audition, auditionIndex) => {
+        if (audition.applications && audition.applications.length > 0) {
+            html += `
+                <div class="review-section">
+                    <h4>${audition.projectTitle} - ${audition.roleTitle}</h4>
+                    <div class="applications-to-review">
+            `;
 
-                            appSnapshot.forEach(function(appDoc) {
-                                const app = appDoc.data();
-                                html += `
-                                    <div class="actor-portfolio">
-                                        <p><strong>Actor Email:</strong> ${app.actorEmail}</p>
-                                        <p><strong>Portfolio Title:</strong> ${app.portfolio.title}</p>
-                                        <p><strong>Bio:</strong> ${app.portfolio.bio}</p>
-                                        <p><strong>Skills:</strong> ${app.portfolio.skills}</p>
-                                        <div class="action-buttons">
-                                            <button class="btn-select" onclick="selectActor('${auditionId}', '${app.actorEmail}')">Select Actor</button>
-                                            <button class="btn-reject" onclick="rejectActor('${auditionId}', '${app.actorEmail}')">Reject</button>
-                                        </div>
-                                    </div>
-                                `;
-                                totalApplications++;
-                            });
-
-                            html += `
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    });
-            });
-
-            // If no auditions or applications, show empty message
-            if (auditionSnapshot.empty) {
-                reviewDiv.innerHTML = '<p class="empty-message">No actor applications to review yet.</p>';
-            } else {
-                // Use setTimeout to allow all nested promises to complete
-                setTimeout(function() {
-                    if (html === '') {
-                        reviewDiv.innerHTML = '<p class="empty-message">No actor applications to review yet.</p>';
-                    } else {
-                        reviewDiv.innerHTML = html;
-                    }
-                }, 500);
-            }
-        })
-        .catch(function(error) {
-            console.error('Error loading applications for review from Firestore:', error);
-            // Fall back to localStorage
-            const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
-            const reviewDiv = document.getElementById('reviewApplications');
-
-            let totalApplications = 0;
-            let html = '';
-
-            auditions.forEach((audition) => {
-                if (audition.applications && audition.applications.length > 0) {
-                    html += `
-                        <div class="review-section">
-                            <h4>${audition.projectTitle} - ${audition.roleTitle}</h4>
-                            <div class="applications-to-review">
-                    `;
-
-                    audition.applications.forEach((app) => {
-                        html += `
-                            <div class="actor-portfolio">
-                                <p><strong>Actor Email:</strong> ${app.actorEmail}</p>
-                                <p><strong>Portfolio Title:</strong> ${app.portfolio.title}</p>
-                                <p><strong>Bio:</strong> ${app.portfolio.bio}</p>
-                                <p><strong>Skills:</strong> ${app.portfolio.skills}</p>
-                                <div class="action-buttons">
-                                    <button class="btn-select" onclick="selectActor('${audition.id}', '${app.actorEmail}')">Select Actor</button>
-                                    <button class="btn-reject" onclick="rejectActor('${audition.id}', '${app.actorEmail}')">Reject</button>
-                                </div>
-                            </div>
-                        `;
-                        totalApplications++;
-                    });
-
-                    html += `
-                            </div>
+            audition.applications.forEach((app, appIndex) => {
+                html += `
+                    <div class="actor-portfolio">
+                        <p><strong>Actor Email:</strong> ${app.actorEmail}</p>
+                        <p><strong>Portfolio Title:</strong> ${app.portfolio.title}</p>
+                        <p><strong>Bio:</strong> ${app.portfolio.bio}</p>
+                        <p><strong>Experience:</strong> ${app.portfolio.experience || 'Not specified'}</p>
+                        <p><strong>Skills:</strong> ${app.portfolio.skills}</p>
+                        <p><strong>Applied on:</strong> ${app.appliedDate}</p>
+                        <div class="action-buttons">
+                            <button class="btn-select" onclick="selectActor(${auditionIndex}, '${app.actorEmail}')">Select Actor</button>
+                            <button class="btn-reject" onclick="rejectActor(${auditionIndex}, '${app.actorEmail}')">Reject</button>
                         </div>
-                    `;
-                }
+                    </div>
+                `;
+                totalApplications++;
             });
 
-            if (totalApplications === 0) {
-                reviewDiv.innerHTML = '<p class="empty-message">No actor applications to review yet.</p>';
-            } else {
-                reviewDiv.innerHTML = html;
-            }
-        });
+            html += `
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    if (totalApplications === 0) {
+        reviewDiv.innerHTML = '<p class="empty-message">No actor applications to review yet.</p>';
+    } else {
+        reviewDiv.innerHTML = html;
+    }
 }
 
-function selectActor(auditionId, actorEmail) {
+function selectActor(auditionIndex, actorEmail) {
     alert(`${actorEmail} has been selected for this role!`);
 }
 
-function rejectActor(auditionId, actorEmail) {
+function rejectActor(auditionIndex, actorEmail) {
     alert(`${actorEmail} has been rejected for this role.`);
 }
 
@@ -745,19 +561,8 @@ function initializeLogoutForDashboard() {
 }
 
 function handleDashboardLogout() {
-    // Sign out from Firebase
-    firebase.auth().signOut()
-        .then(function() {
-            // Clear session storage
-            sessionStorage.removeItem('kalakarUser');
-            alert('You have been logged out successfully!');
-            window.location.href = 'index.html';
-        })
-        .catch(function(error) {
-            console.error('Firebase logout error:', error);
-            // Still perform local logout even if Firebase fails
-            sessionStorage.removeItem('kalakarUser');
-            alert('You have been logged out.');
-            window.location.href = 'index.html';
-        });
+    // Clear session storage
+    sessionStorage.removeItem('kalakarUser');
+    alert('You have been logged out successfully!');
+    window.location.href = 'index.html';
 }
