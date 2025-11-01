@@ -125,7 +125,7 @@ function loadPromotionsPage() {
 }
 
 // ===== HANDLE PROMOTION FORM SUBMISSION =====
-function handlePromotionSubmit(e, userEmail) {
+async function handlePromotionSubmit(e, userEmail) {
     e.preventDefault();
 
     const eventTitle = document.getElementById('eventTitle').value;
@@ -148,38 +148,44 @@ function handlePromotionSubmit(e, userEmail) {
     isValid &= validatePromotionField(contactInfo, 'contactInfoError', 'Please enter contact information');
 
     if (isValid) {
-        // Create promotion object
-        const promotion = {
-            id: Date.now(), // Simple unique ID
-            postedBy: userEmail,
-            eventTitle: eventTitle,
-            eventType: eventType,
-            eventDescription: eventDescription,
-            eventVenue: eventVenue,
-            eventDate: eventDate,
-            eventTime: eventTime,
-            ticketInfo: ticketInfo || 'Not specified',
-            contactInfo: contactInfo,
-            postedDate: new Date().toLocaleDateString(),
-            createdAt: new Date().toISOString()
-        };
+        try {
+            const promotion = {
+                posted_by: userEmail,
+                event_title: eventTitle,
+                event_type: eventType,
+                event_description: eventDescription,
+                event_venue: eventVenue,
+                event_date: eventDate,
+                event_time: eventTime,
+                ticket_info: ticketInfo || 'Not specified',
+                contact_info: contactInfo,
+                posted_date: new Date().toLocaleDateString()
+            };
 
-        // Save to localStorage
-        const promotions = JSON.parse(localStorage.getItem('eventPromotions') || '[]');
-        promotions.push(promotion);
-        localStorage.setItem('eventPromotions', JSON.stringify(promotions));
+            const { error } = await supabase
+                .from('promotions')
+                .insert([promotion]);
 
-        // Reset form
-        document.getElementById('promotionForm').reset();
+            if (error) {
+                console.error('Error posting promotion:', error);
+                alert('Error posting promotion. Please try again.');
+                return;
+            }
 
-        // Clear error messages
-        document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+            // Reset form
+            document.getElementById('promotionForm').reset();
 
-        // Show success message
-        alert('Promotion posted successfully!');
+            // Clear error messages
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
 
-        // Reload promotions list
-        loadAllPromotions();
+            alert('Promotion posted successfully!');
+
+            // Reload promotions list
+            loadAllPromotions();
+        } catch (err) {
+            console.error('Unexpected error:', err);
+            alert('An unexpected error occurred. Please try again.');
+        }
     }
 }
 
@@ -196,42 +202,52 @@ function validatePromotionField(value, errorElementId, errorMessage) {
 }
 
 // ===== LOAD AND DISPLAY ALL PROMOTIONS =====
-function loadAllPromotions() {
+async function loadAllPromotions() {
     const promotionsDiv = document.getElementById('allPromotions');
 
-    // Load promotions from localStorage
-    const promotions = JSON.parse(localStorage.getItem('eventPromotions') || '[]');
+    try {
+        const { data, error } = await supabase
+            .from('promotions')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-    // Sort by date (newest first)
-    promotions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        if (error) {
+            console.error('Error loading promotions:', error);
+            promotionsDiv.innerHTML = '<p class="empty-message">Error loading promotions. Please refresh.</p>';
+            return;
+        }
 
-    if (promotions.length === 0) {
-        promotionsDiv.innerHTML = '<p class="empty-message">No promotions available right now. Check back soon!</p>';
-    } else {
-        let html = '';
-        promotions.forEach((promo) => {
-            html += `
-                <div class="promotion-card">
-                    <div class="promotion-header">
-                        <h3>${promo.eventTitle}</h3>
-                        <span class="promotion-type">${promo.eventType}</span>
-                    </div>
-                    <div class="promotion-details">
-                        <p class="promotion-description">${promo.eventDescription}</p>
-                        <div class="promotion-info-grid">
-                            <p><strong>📍 Venue:</strong> ${promo.eventVenue}</p>
-                            <p><strong>📅 Date:</strong> ${formatDate(promo.eventDate)}</p>
-                            <p><strong>🕐 Time:</strong> ${formatTime(promo.eventTime)}</p>
-                            <p><strong>🎫 Tickets:</strong> ${promo.ticketInfo}</p>
-                            <p><strong>📞 Contact:</strong> ${promo.contactInfo}</p>
-                            <p><strong>Posted by:</strong> ${promo.postedBy}</p>
+        if (!data || data.length === 0) {
+            promotionsDiv.innerHTML = '<p class="empty-message">No promotions available right now. Check back soon!</p>';
+        } else {
+            let html = '';
+            data.forEach((promo) => {
+                html += `
+                    <div class="promotion-card">
+                        <div class="promotion-header">
+                            <h3>${promo.event_title}</h3>
+                            <span class="promotion-type">${promo.event_type}</span>
                         </div>
-                        <p class="promotion-posted-date">Posted on: ${promo.postedDate}</p>
+                        <div class="promotion-details">
+                            <p class="promotion-description">${promo.event_description}</p>
+                            <div class="promotion-info-grid">
+                                <p><strong>📍 Venue:</strong> ${promo.event_venue}</p>
+                                <p><strong>📅 Date:</strong> ${formatDate(promo.event_date)}</p>
+                                <p><strong>🕐 Time:</strong> ${formatTime(promo.event_time)}</p>
+                                <p><strong>🎫 Tickets:</strong> ${promo.ticket_info}</p>
+                                <p><strong>📞 Contact:</strong> ${promo.contact_info}</p>
+                                <p><strong>Posted by:</strong> ${promo.posted_by}</p>
+                            </div>
+                            <p class="promotion-posted-date">Posted on: ${promo.posted_date}</p>
+                        </div>
                     </div>
-                </div>
-            `;
-        });
-        promotionsDiv.innerHTML = html;
+                `;
+            });
+            promotionsDiv.innerHTML = html;
+        }
+    } catch (err) {
+        console.error('Unexpected error:', err);
+        promotionsDiv.innerHTML = '<p class="empty-message">Error loading promotions. Please refresh.</p>';
     }
 }
 
