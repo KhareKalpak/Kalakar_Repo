@@ -217,7 +217,7 @@ function validateRole(selectedRole) {
 }
 
 // Handle signup form submission
-function handleSignupSubmit(e) {
+async function handleSignupSubmit(e) {
     e.preventDefault();
 
     const email = document.getElementById('signupEmail').value;
@@ -238,35 +238,65 @@ function handleSignupSubmit(e) {
         const submitBtn = document.getElementById('signupForm').querySelector('.form-submit-btn');
         disableSubmitButton(submitBtn);
 
-        // Prepare user data
-        const userData = {
-            email: email,
-            role: selectedRole.value,
-            contactNumber: contactNumber,
-            age: parseInt(age),
-            joinDate: new Date().toLocaleDateString(),
-            createdAt: new Date().toISOString()
-        };
+        try {
+            // Check if email already exists in Supabase
+            const { data: existingUsers, error: checkError } = await supabase
+                .from('users')
+                .select('email')
+                .eq('email', email);
 
-        // Store user data in sessionStorage
-        sessionStorage.setItem('kalakarUser', JSON.stringify(userData));
+            if (checkError) {
+                console.error('Error checking existing user:', checkError);
+                alert('Error checking email. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In';
+                return;
+            }
 
-        // Also store in localStorage for persistence
-        const users = JSON.parse(localStorage.getItem('kalakarUsers') || '[]');
+            if (existingUsers && existingUsers.length > 0) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In';
+                alert('This email is already registered.');
+                return;
+            }
 
-        // Check if email already exists
-        const existingUser = users.find(user => user.email === email);
-        if (existingUser) {
+            // Prepare user data
+            const userData = {
+                email: email,
+                role: selectedRole.value,
+                contact_number: contactNumber,
+                age: parseInt(age),
+                join_date: new Date().toLocaleDateString()
+            };
+
+            // Insert user into Supabase database
+            const { data, error } = await supabase
+                .from('users')
+                .insert([userData])
+                .select();
+
+            if (error) {
+                console.error('Error creating user:', error);
+                alert('Error creating account. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In';
+                return;
+            }
+
+            // Store user data in sessionStorage for immediate access
+            sessionStorage.setItem('kalakarUser', JSON.stringify({
+                email: email,
+                role: selectedRole.value,
+                joinDate: new Date().toLocaleDateString()
+            }));
+
+            showSuccessMessage('Signed in successfully!');
+        } catch (err) {
+            console.error('Unexpected error:', err);
+            alert('An unexpected error occurred. Please try again.');
             submitBtn.disabled = false;
             submitBtn.textContent = 'Sign In';
-            alert('This email is already registered.');
-            return;
         }
-
-        users.push(userData);
-        localStorage.setItem('kalakarUsers', JSON.stringify(users));
-
-        showSuccessMessage('Signed in successfully!');
     }
 }
 
