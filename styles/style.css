@@ -1666,3 +1666,187 @@ body::after {
 .section-heading {
     font-weight: bold;
 }
+
+/* ===== PROMOTIONS PAGE STYLING ===== */
+.promotions-main {
+    background: linear-gradient(135deg, #87ceeb 0%, #e0f6ff 100%);
+    min-height: calc(100vh - 140px);
+    padding: 40px 20px;
+}
+
+.promotions-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.promotions-header {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.promotions-header h1 {
+    font-size: 28px;
+    color: #333333;
+    margin: 0 0 10px 0;
+}
+
+.user-role-info {
+    font-size: 14px;
+    color: #555555;
+    margin: 0;
+    font-style: italic;
+}
+
+/* Promotions List */
+.promotions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.promotion-card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #0099cc;
+    transition: all 0.3s ease;
+}
+
+.promotion-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.promotion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.promotion-header h3 {
+    color: #0099cc;
+    margin: 0;
+    font-size: 20px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.promotion-type {
+    background-color: #0099cc;
+    color: #ffffff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.promotion-details {
+    margin-top: 15px;
+}
+
+.promotion-description {
+    font-size: 14px;
+    color: #333333;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.promotion-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.promotion-info-grid p {
+    margin: 0;
+    font-size: 13px;
+    color: #555555;
+    line-height: 1.5;
+}
+
+.promotion-info-grid strong {
+    color: #333333;
+    font-weight: 600;
+}
+
+.promotion-posted-date {
+    font-size: 12px;
+    color: #999999;
+    font-style: italic;
+    margin: 10px 0 0 0;
+    text-align: right;
+}
+
+/* ===== RESPONSIVE DESIGN - PROMOTIONS PAGE ===== */
+@media (max-width: 1024px) {
+    .promotions-header {
+        padding: 25px;
+    }
+
+    .promotions-header h1 {
+        font-size: 24px;
+    }
+
+    .user-role-info {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 767px) {
+    .promotions-main {
+        padding: 20px;
+        min-height: calc(100vh - 130px);
+    }
+
+    .promotions-header {
+        padding: 20px;
+    }
+
+    .promotions-header h1 {
+        font-size: 20px;
+    }
+
+    .user-role-info {
+        font-size: 12px;
+    }
+
+    .promotion-card {
+        padding: 15px;
+    }
+
+    .promotion-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .promotion-header h3 {
+        font-size: 18px;
+    }
+
+    .promotion-info-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .promotion-posted-date {
+        text-align: left;
+        font-size: 11px;
+    }
+}
