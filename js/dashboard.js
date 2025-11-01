@@ -1,6 +1,6 @@
 // =====================================================
 // KALAKAR DASHBOARD - JAVASCRIPT
-// Functionality: Actor and Director dashboards
+// Functionality: Actor and Director dashboards with Supabase
 // =====================================================
 
 // Wait for DOM to be fully loaded
@@ -150,7 +150,7 @@ function loadActorDashboard(user) {
     loadActorApplications(user.email);
 }
 
-function handlePortfolioSubmit(e, userEmail) {
+async function handlePortfolioSubmit(e, userEmail) {
     e.preventDefault();
 
     const title = document.getElementById('portfolioTitle').value;
@@ -165,27 +165,51 @@ function handlePortfolioSubmit(e, userEmail) {
     isValid &= validatePortfolioField(skills, 'portfolioSkillsError', 'Please enter your skills');
 
     if (isValid) {
-        // Create portfolio object
-        const portfolio = {
-            userEmail: userEmail,
-            title: title,
-            bio: bio,
-            experience: experience,
-            skills: skills,
-            savedDate: new Date().toLocaleDateString(),
-            updatedAt: new Date().toISOString()
-        };
+        try {
+            // Check if portfolio already exists
+            const { data: existingPortfolio } = await supabase
+                .from('portfolios')
+                .select('id')
+                .eq('user_email', userEmail)
+                .single();
 
-        // Save to localStorage
-        const portfolios = JSON.parse(localStorage.getItem('actorPortfolios') || '{}');
-        portfolios[userEmail] = portfolio;
-        localStorage.setItem('actorPortfolios', JSON.stringify(portfolios));
+            const portfolio = {
+                user_email: userEmail,
+                title: title,
+                bio: bio,
+                experience: experience,
+                skills: skills,
+                saved_date: new Date().toLocaleDateString()
+            };
 
-        // Show success message
-        alert('Portfolio saved successfully!');
+            let result;
+            if (existingPortfolio) {
+                // Update existing portfolio
+                result = await supabase
+                    .from('portfolios')
+                    .update(portfolio)
+                    .eq('user_email', userEmail)
+                    .select();
+            } else {
+                // Insert new portfolio
+                result = await supabase
+                    .from('portfolios')
+                    .insert([portfolio])
+                    .select();
+            }
 
-        // Display saved portfolio
-        displayActorPortfolio(portfolio);
+            if (result.error) {
+                console.error('Error saving portfolio:', result.error);
+                alert('Error saving portfolio. Please try again.');
+                return;
+            }
+
+            alert('Portfolio saved successfully!');
+            displayActorPortfolio(portfolio);
+        } catch (err) {
+            console.error('Unexpected error:', err);
+            alert('An unexpected error occurred. Please try again.');
+        }
     }
 }
 
@@ -200,12 +224,26 @@ function validatePortfolioField(value, errorElementId, errorMessage) {
     }
 }
 
-function loadActorPortfolio(userEmail) {
-    const portfolios = JSON.parse(localStorage.getItem('actorPortfolios') || '{}');
-    const portfolio = portfolios[userEmail];
+async function loadActorPortfolio(userEmail) {
+    try {
+        const { data, error } = await supabase
+            .from('portfolios')
+            .select('*')
+            .eq('user_email', userEmail)
+            .single();
 
-    if (portfolio) {
-        displayActorPortfolio(portfolio);
+        if (error) {
+            if (error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+                console.error('Error loading portfolio:', error);
+            }
+            return;
+        }
+
+        if (data) {
+            displayActorPortfolio(data);
+        }
+    } catch (err) {
+        console.error('Unexpected error:', err);
     }
 }
 
@@ -218,31 +256,44 @@ function displayActorPortfolio(portfolio) {
     document.getElementById('displayPortfolioSkills').textContent = portfolio.skills;
 }
 
-function loadAvailableAuditions(user) {
+async function loadAvailableAuditions(user) {
     const findAuditionsDiv = document.getElementById('findAuditions');
 
-    // Load auditions from localStorage
-    const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
+    try {
+        const { data, error } = await supabase
+            .from('auditions')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-    if (auditions.length === 0) {
-        findAuditionsDiv.innerHTML = '<p class="empty-message">No auditions available right now. Check back soon!</p>';
-    } else {
-        let html = '';
-        auditions.forEach((audition, index) => {
-            html += `
-                <div class="audition-card-with-apply">
-                    <div class="audition-details">
-                        <h4>${audition.projectTitle}</h4>
-                        <p><strong>Role:</strong> ${audition.roleTitle}</p>
-                        <p><strong>Description:</strong> ${audition.roleDescription}</p>
-                        <p><strong>Location:</strong> ${audition.location}</p>
-                        <p><strong>Deadline:</strong> ${audition.deadline}</p>
+        if (error) {
+            console.error('Error loading auditions:', error);
+            findAuditionsDiv.innerHTML = '<p class="empty-message">Error loading auditions. Please refresh.</p>';
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            findAuditionsDiv.innerHTML = '<p class="empty-message">No auditions available right now. Check back soon!</p>';
+        } else {
+            let html = '';
+            data.forEach((audition) => {
+                html += `
+                    <div class="audition-card-with-apply">
+                        <div class="audition-details">
+                            <h4>${audition.project_title}</h4>
+                            <p><strong>Role:</strong> ${audition.role_title}</p>
+                            <p><strong>Description:</strong> ${audition.role_description}</p>
+                            <p><strong>Location:</strong> ${audition.location}</p>
+                            <p><strong>Deadline:</strong> ${audition.deadline}</p>
+                        </div>
+                        <button class="apply-btn-action" onclick="openApplyModal('${audition.id}', '${audition.project_title}', '${audition.role_title}', '${audition.location}')">Apply</button>
                     </div>
-                    <button class="apply-btn-action" onclick="openApplyModal(${index}, '${audition.projectTitle}', '${audition.roleTitle}', '${audition.location}')">Apply</button>
-                </div>
-            `;
-        });
-        findAuditionsDiv.innerHTML = html;
+                `;
+            });
+            findAuditionsDiv.innerHTML = html;
+        }
+    } catch (err) {
+        console.error('Unexpected error:', err);
+        findAuditionsDiv.innerHTML = '<p class="empty-message">Error loading auditions. Please refresh.</p>';
     }
 }
 
@@ -263,7 +314,6 @@ function setupApplyModal() {
         });
     }
 
-    // Close modal when clicking outside
     window.addEventListener('click', function(event) {
         if (event.target === modal) {
             modal.style.display = 'none';
@@ -271,110 +321,115 @@ function setupApplyModal() {
     });
 }
 
-function openApplyModal(auditionIndex, projectTitle, roleTitle, location) {
+async function openApplyModal(auditionId, projectTitle, roleTitle, location) {
     const modal = document.getElementById('applyModal');
     const userData = sessionStorage.getItem('kalakarUser');
     const user = JSON.parse(userData);
 
-    // Get portfolio from localStorage
-    const portfolios = JSON.parse(localStorage.getItem('actorPortfolios') || '{}');
-    const portfolio = portfolios[user.email];
+    try {
+        // Get portfolio from Supabase
+        const { data: portfolio, error } = await supabase
+            .from('portfolios')
+            .select('*')
+            .eq('user_email', user.email)
+            .single();
 
-    // Check if portfolio exists
-    if (!portfolio) {
-        alert('Please save your portfolio first before applying to auditions!');
-        return;
+        if (error || !portfolio) {
+            alert('Please save your portfolio first before applying to auditions!');
+            return;
+        }
+
+        // Populate modal
+        document.getElementById('modalProjectTitle').textContent = projectTitle;
+        document.getElementById('modalRoleTitle').textContent = roleTitle;
+        document.getElementById('modalLocation').textContent = location;
+
+        const portfolioPreview = document.getElementById('portfolioToApply');
+        portfolioPreview.innerHTML = `
+            <p><strong>Title:</strong> ${portfolio.title}</p>
+            <p><strong>Bio:</strong> ${portfolio.bio}</p>
+            <p><strong>Experience:</strong> ${portfolio.experience || 'Not specified'}</p>
+            <p><strong>Skills:</strong> ${portfolio.skills}</p>
+        `;
+
+        const confirmBtn = document.getElementById('confirmApplyBtn');
+        confirmBtn.onclick = function() {
+            confirmApplication(auditionId, projectTitle, roleTitle, location, portfolio);
+        };
+
+        modal.style.display = 'block';
+    } catch (err) {
+        console.error('Error loading portfolio:', err);
+        alert('Error loading your portfolio. Please try again.');
     }
-
-    // Populate modal with audition details
-    document.getElementById('modalProjectTitle').textContent = projectTitle;
-    document.getElementById('modalRoleTitle').textContent = roleTitle;
-    document.getElementById('modalLocation').textContent = location;
-
-    // Display portfolio
-    const portfolioPreview = document.getElementById('portfolioToApply');
-    portfolioPreview.innerHTML = `
-        <p><strong>Title:</strong> ${portfolio.title}</p>
-        <p><strong>Bio:</strong> ${portfolio.bio}</p>
-        <p><strong>Experience:</strong> ${portfolio.experience || 'Not specified'}</p>
-        <p><strong>Skills:</strong> ${portfolio.skills}</p>
-    `;
-
-    // Setup confirm button
-    const confirmBtn = document.getElementById('confirmApplyBtn');
-    confirmBtn.onclick = function() {
-        confirmApplication(auditionIndex, projectTitle, roleTitle, location, portfolio);
-    };
-
-    // Show modal
-    modal.style.display = 'block';
 }
 
-function confirmApplication(auditionIndex, projectTitle, roleTitle, location, portfolio) {
+async function confirmApplication(auditionId, projectTitle, roleTitle, location, portfolio) {
     const userData = sessionStorage.getItem('kalakarUser');
     const user = JSON.parse(userData);
 
-    // Create application object
-    const application = {
-        auditionIndex: auditionIndex,
-        projectTitle: projectTitle,
-        roleTitle: roleTitle,
-        location: location,
-        actorEmail: user.email,
-        portfolio: portfolio,
-        appliedDate: new Date().toLocaleDateString(),
-        createdAt: new Date().toISOString(),
-        status: 'pending'
-    };
+    try {
+        const application = {
+            audition_id: auditionId,
+            actor_email: user.email,
+            portfolio: portfolio,
+            applied_date: new Date().toLocaleDateString(),
+            status: 'pending'
+        };
 
-    // Save application to localStorage
-    const applications = JSON.parse(localStorage.getItem('actorApplications') || '[]');
-    applications.push(application);
-    localStorage.setItem('actorApplications', JSON.stringify(applications));
+        const { error } = await supabase
+            .from('applications')
+            .insert([application]);
 
-    // Also add application to the audition
-    const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
-    if (auditions[auditionIndex]) {
-        if (!auditions[auditionIndex].applications) {
-            auditions[auditionIndex].applications = [];
+        if (error) {
+            console.error('Error submitting application:', error);
+            alert('Error submitting application. Please try again.');
+            return;
         }
-        auditions[auditionIndex].applications.push(application);
-        localStorage.setItem('directorAuditions', JSON.stringify(auditions));
+
+        alert('Application submitted successfully! Directors will review your portfolio.');
+        document.getElementById('applyModal').style.display = 'none';
+        loadActorApplications(user.email);
+    } catch (err) {
+        console.error('Unexpected error:', err);
+        alert('An unexpected error occurred. Please try again.');
     }
-
-    // Show success message
-    alert('Application submitted successfully! Directors will review your portfolio.');
-
-    // Close modal
-    document.getElementById('applyModal').style.display = 'none';
-
-    // Reload applications
-    loadActorApplications(user.email);
 }
 
-function loadActorApplications(userEmail) {
+async function loadActorApplications(userEmail) {
     const applicationsDiv = document.getElementById('applicationsStatus');
 
-    // Load applications from localStorage
-    const applications = JSON.parse(localStorage.getItem('actorApplications') || '[]');
-    const userApplications = applications.filter(app => app.actorEmail === userEmail);
+    try {
+        const { data, error } = await supabase
+            .from('applications')
+            .select('*')
+            .eq('actor_email', userEmail)
+            .order('created_at', { ascending: false });
 
-    if (userApplications.length === 0) {
-        applicationsDiv.innerHTML = '<p class="empty-message">No audition applications yet. Check back soon!</p>';
-    } else {
-        let html = '';
-        userApplications.forEach((app) => {
-            html += `
-                <div class="application-card">
-                    <h4>${app.projectTitle}</h4>
-                    <p><strong>Role:</strong> ${app.roleTitle}</p>
-                    <p><strong>Location:</strong> ${app.location}</p>
-                    <p><strong>Status:</strong> <span class="status-${app.status}">${app.status.toUpperCase()}</span></p>
-                    <p><strong>Applied on:</strong> ${app.appliedDate}</p>
-                </div>
-            `;
-        });
-        applicationsDiv.innerHTML = html;
+        if (error) {
+            console.error('Error loading applications:', error);
+            applicationsDiv.innerHTML = '<p class="empty-message">Error loading applications. Please refresh.</p>';
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            applicationsDiv.innerHTML = '<p class="empty-message">No audition applications yet. Check back soon!</p>';
+        } else {
+            let html = '';
+            data.forEach((app) => {
+                html += `
+                    <div class="application-card">
+                        <h4>Application Submitted</h4>
+                        <p><strong>Status:</strong> <span class="status-${app.status}">${app.status.toUpperCase()}</span></p>
+                        <p><strong>Applied on:</strong> ${app.applied_date}</p>
+                    </div>
+                `;
+            });
+            applicationsDiv.innerHTML = html;
+        }
+    } catch (err) {
+        console.error('Unexpected error:', err);
+        applicationsDiv.innerHTML = '<p class="empty-message">Error loading applications. Please refresh.</p>';
     }
 }
 
@@ -383,11 +438,9 @@ function loadDirectorDashboard(user) {
     const directorDashboard = document.getElementById('directorDashboard');
     directorDashboard.style.display = 'block';
 
-    // Set profile information
     document.getElementById('directorEmail').textContent = user.email;
     document.getElementById('directorJoinDate').textContent = user.joinDate;
 
-    // Setup audition form
     const auditionForm = document.getElementById('auditionForm');
     if (auditionForm) {
         auditionForm.addEventListener('submit', function(e) {
@@ -395,14 +448,11 @@ function loadDirectorDashboard(user) {
         });
     }
 
-    // Load posted auditions
     loadPostedAuditions(user.email);
-
-    // Load applications for review
     loadApplicationsForReview(user.email);
 }
 
-function handleAuditionSubmit(e, userEmail) {
+async function handleAuditionSubmit(e, userEmail) {
     e.preventDefault();
 
     const projectTitle = document.getElementById('projectTitle').value;
@@ -411,7 +461,6 @@ function handleAuditionSubmit(e, userEmail) {
     const location = document.getElementById('auditionLocation').value;
     const deadline = document.getElementById('auditionDeadline').value;
 
-    // Validate
     let isValid = true;
     isValid &= validateAuditionField(projectTitle, 'projectTitleError', 'Please enter project title');
     isValid &= validateAuditionField(roleTitle, 'roleTitleError', 'Please enter role title');
@@ -420,32 +469,34 @@ function handleAuditionSubmit(e, userEmail) {
     isValid &= validateAuditionField(deadline, 'auditionDeadlineError', 'Please select a deadline');
 
     if (isValid) {
-        // Create audition object
-        const audition = {
-            directorEmail: userEmail,
-            projectTitle: projectTitle,
-            roleTitle: roleTitle,
-            roleDescription: roleDescription,
-            location: location,
-            deadline: deadline,
-            postedDate: new Date().toLocaleDateString(),
-            createdAt: new Date().toISOString(),
-            applications: []
-        };
+        try {
+            const audition = {
+                director_email: userEmail,
+                project_title: projectTitle,
+                role_title: roleTitle,
+                role_description: roleDescription,
+                location: location,
+                deadline: deadline,
+                posted_date: new Date().toLocaleDateString()
+            };
 
-        // Save to localStorage
-        const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
-        auditions.push(audition);
-        localStorage.setItem('directorAuditions', JSON.stringify(auditions));
+            const { error } = await supabase
+                .from('auditions')
+                .insert([audition]);
 
-        // Reset form
-        document.getElementById('auditionForm').reset();
+            if (error) {
+                console.error('Error posting audition:', error);
+                alert('Error posting audition. Please try again.');
+                return;
+            }
 
-        // Show success message
-        alert('Audition posted successfully!');
-
-        // Reload auditions list
-        loadPostedAuditions(userEmail);
+            document.getElementById('auditionForm').reset();
+            alert('Audition posted successfully!');
+            loadPostedAuditions(userEmail);
+        } catch (err) {
+            console.error('Unexpected error:', err);
+            alert('An unexpected error occurred. Please try again.');
+        }
     }
 }
 
@@ -460,92 +511,138 @@ function validateAuditionField(value, errorElementId, errorMessage) {
     }
 }
 
-function loadPostedAuditions(userEmail) {
+async function loadPostedAuditions(userEmail) {
     const auditionsDiv = document.getElementById('postedAuditions');
 
-    // Load auditions from localStorage
-    const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
-    const userAuditions = auditions.filter(audition => audition.directorEmail === userEmail);
+    try {
+        const { data, error } = await supabase
+            .from('auditions')
+            .select('*')
+            .eq('director_email', userEmail)
+            .order('created_at', { ascending: false });
 
-    if (userAuditions.length === 0) {
-        auditionsDiv.innerHTML = '<p class="empty-message">You haven\'t posted any auditions yet.</p>';
-    } else {
-        let html = '';
-        userAuditions.forEach((audition) => {
-            const appCount = audition.applications ? audition.applications.length : 0;
-            html += `
-                <div class="audition-card">
-                    <div class="audition-header">
-                        <h4>${audition.projectTitle}</h4>
-                        <span class="audition-role">${audition.roleTitle}</span>
+        if (error) {
+            console.error('Error loading auditions:', error);
+            auditionsDiv.innerHTML = '<p class="empty-message">Error loading auditions. Please refresh.</p>';
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            auditionsDiv.innerHTML = '<p class="empty-message">You haven\'t posted any auditions yet.</p>';
+        } else {
+            let html = '';
+            for (const audition of data) {
+                // Count applications
+                const { count } = await supabase
+                    .from('applications')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('audition_id', audition.id);
+
+                html += `
+                    <div class="audition-card">
+                        <div class="audition-header">
+                            <h4>${audition.project_title}</h4>
+                            <span class="audition-role">${audition.role_title}</span>
+                        </div>
+                        <p><strong>Description:</strong> ${audition.role_description}</p>
+                        <p><strong>Location:</strong> ${audition.location}</p>
+                        <p><strong>Deadline:</strong> ${audition.deadline}</p>
+                        <p><strong>Posted:</strong> ${audition.posted_date}</p>
+                        <p><strong>Applications:</strong> <span class="app-count">${count || 0}</span></p>
                     </div>
-                    <p><strong>Description:</strong> ${audition.roleDescription}</p>
-                    <p><strong>Location:</strong> ${audition.location}</p>
-                    <p><strong>Deadline:</strong> ${audition.deadline}</p>
-                    <p><strong>Posted:</strong> ${audition.postedDate}</p>
-                    <p><strong>Applications:</strong> <span class="app-count">${appCount}</span></p>
-                </div>
-            `;
-        });
-        auditionsDiv.innerHTML = html;
+                `;
+            }
+            auditionsDiv.innerHTML = html;
+        }
+    } catch (err) {
+        console.error('Unexpected error:', err);
+        auditionsDiv.innerHTML = '<p class="empty-message">Error loading auditions. Please refresh.</p>';
     }
 }
 
-function loadApplicationsForReview(userEmail) {
+async function loadApplicationsForReview(userEmail) {
     const reviewDiv = document.getElementById('reviewApplications');
 
-    // Load auditions from localStorage
-    const auditions = JSON.parse(localStorage.getItem('directorAuditions') || '[]');
-    const userAuditions = auditions.filter(audition => audition.directorEmail === userEmail);
+    try {
+        // Get director's auditions
+        const { data: auditions, error: audError } = await supabase
+            .from('auditions')
+            .select('*')
+            .eq('director_email', userEmail);
 
-    let totalApplications = 0;
-    let html = '';
+        if (audError) {
+            console.error('Error loading auditions:', audError);
+            reviewDiv.innerHTML = '<p class="empty-message">Error loading applications. Please refresh.</p>';
+            return;
+        }
 
-    userAuditions.forEach((audition, auditionIndex) => {
-        if (audition.applications && audition.applications.length > 0) {
-            html += `
-                <div class="review-section">
-                    <h4>${audition.projectTitle} - ${audition.roleTitle}</h4>
-                    <div class="applications-to-review">
-            `;
+        if (!auditions || auditions.length === 0) {
+            reviewDiv.innerHTML = '<p class="empty-message">No actor applications to review yet.</p>';
+            return;
+        }
 
-            audition.applications.forEach((app, appIndex) => {
+        let html = '';
+        let totalApps = 0;
+
+        for (const audition of auditions) {
+            const { data: apps, error: appError } = await supabase
+                .from('applications')
+                .select('*')
+                .eq('audition_id', audition.id);
+
+            if (appError) {
+                console.error('Error loading applications:', appError);
+                continue;
+            }
+
+            if (apps && apps.length > 0) {
                 html += `
-                    <div class="actor-portfolio">
-                        <p><strong>Actor Email:</strong> ${app.actorEmail}</p>
-                        <p><strong>Portfolio Title:</strong> ${app.portfolio.title}</p>
-                        <p><strong>Bio:</strong> ${app.portfolio.bio}</p>
-                        <p><strong>Experience:</strong> ${app.portfolio.experience || 'Not specified'}</p>
-                        <p><strong>Skills:</strong> ${app.portfolio.skills}</p>
-                        <p><strong>Applied on:</strong> ${app.appliedDate}</p>
-                        <div class="action-buttons">
-                            <button class="btn-select" onclick="selectActor(${auditionIndex}, '${app.actorEmail}')">Select Actor</button>
-                            <button class="btn-reject" onclick="rejectActor(${auditionIndex}, '${app.actorEmail}')">Reject</button>
+                    <div class="review-section">
+                        <h4>${audition.project_title} - ${audition.role_title}</h4>
+                        <div class="applications-to-review">
+                `;
+
+                apps.forEach((app) => {
+                    totalApps++;
+                    html += `
+                        <div class="actor-portfolio">
+                            <p><strong>Actor Email:</strong> ${app.actor_email}</p>
+                            <p><strong>Portfolio Title:</strong> ${app.portfolio.title}</p>
+                            <p><strong>Bio:</strong> ${app.portfolio.bio}</p>
+                            <p><strong>Experience:</strong> ${app.portfolio.experience || 'Not specified'}</p>
+                            <p><strong>Skills:</strong> ${app.portfolio.skills}</p>
+                            <p><strong>Applied on:</strong> ${app.applied_date}</p>
+                            <div class="action-buttons">
+                                <button class="btn-select" onclick="selectActor('${app.actor_email}')">Select Actor</button>
+                                <button class="btn-reject" onclick="rejectActor('${app.actor_email}')">Reject</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
                         </div>
                     </div>
                 `;
-                totalApplications++;
-            });
-
-            html += `
-                    </div>
-                </div>
-            `;
+            }
         }
-    });
 
-    if (totalApplications === 0) {
-        reviewDiv.innerHTML = '<p class="empty-message">No actor applications to review yet.</p>';
-    } else {
-        reviewDiv.innerHTML = html;
+        if (totalApps === 0) {
+            reviewDiv.innerHTML = '<p class="empty-message">No actor applications to review yet.</p>';
+        } else {
+            reviewDiv.innerHTML = html;
+        }
+    } catch (err) {
+        console.error('Unexpected error:', err);
+        reviewDiv.innerHTML = '<p class="empty-message">Error loading applications. Please refresh.</p>';
     }
 }
 
-function selectActor(auditionIndex, actorEmail) {
+function selectActor(actorEmail) {
     alert(`${actorEmail} has been selected for this role!`);
 }
 
-function rejectActor(auditionIndex, actorEmail) {
+function rejectActor(actorEmail) {
     alert(`${actorEmail} has been rejected for this role.`);
 }
 
@@ -561,7 +658,6 @@ function initializeLogoutForDashboard() {
 }
 
 function handleDashboardLogout() {
-    // Clear session storage
     sessionStorage.removeItem('kalakarUser');
     alert('You have been logged out successfully!');
     window.location.href = 'index.html';
