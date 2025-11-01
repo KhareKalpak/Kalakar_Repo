@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Kalakar - Promotions">
+    <title>Promotions - Kalakar</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    <!-- Header with Navigation -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Kalakar</div>
+
+            <!-- Hamburger Menu for Mobile -->
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <!-- Navigation Menu -->
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+            </nav>
+
+            <button class="cta-button header-cta" onclick="window.location.href='index.html'">Back to Home</button>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="menu-overlay"></div>
+
+    <!-- Mobile Slide-out Menu -->
+    <nav class="mobile-menu">
+        <a href="index.html" class="mobile-nav-link">Home</a>
+        <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
+        <button class="cta-button mobile-cta" onclick="window.location.href='index.html'">Back to Home</button>
+    </nav>
+
+    <!-- Main Promotions Content -->
+    <main class="promotions-main">
+        <div class="promotions-container">
+            <!-- Promotions Header -->
+            <div class="promotions-header">
+                <h1>Event Promotions</h1>
+                <p id="userRoleInfo" class="user-role-info">Loading...</p>
+            </div>
+
+            <!-- Post Promotion Section (Directors/Producers Only) -->
+            <section id="postPromotionSection" class="dashboard-card" style="display: none;">
+                <h2>Post New Promotion</h2>
+                <p class="section-subtitle">Promote your drama, play, or entertainment event to reach actors and audiences in Pune.</p>
+                <form id="promotionForm" class="dashboard-form">
+                    <div class="form-group">
+                        <label for="eventTitle">Event Title</label>
+                        <input
+                            type="text"
+                            id="eventTitle"
+                            placeholder="e.g., Marathi Drama 'Natsamrat'"
+                            class="form-input"
+                        />
+                        <span class="error-message" id="eventTitleError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventType">Event Type</label>
+                        <select id="eventType" class="form-input">
+                            <option value="">Select event type</option>
+                            <option value="Drama">Drama</option>
+                            <option value="Play">Play</option>
+                            <option value="Theatre">Theatre</option>
+                            <option value="Musical">Musical</option>
+                            <option value="Comedy Show">Comedy Show</option>
+                            <option value="Cultural Event">Cultural Event</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <span class="error-message" id="eventTypeError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventDescription">Event Description</label>
+                        <textarea
+                            id="eventDescription"
+                            placeholder="Describe your event, storyline, cast, and what makes it special..."
+                            class="form-input textarea-input"
+                            rows="4"
+                        ></textarea>
+                        <span class="error-message" id="eventDescriptionError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventVenue">Venue</label>
+                        <input
+                            type="text"
+                            id="eventVenue"
+                            placeholder="e.g., Balgandharva Theatre, Pune"
+                            class="form-input"
+                        />
+                        <span class="error-message" id="eventVenueError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventDate">Event Date</label>
+                        <input
+                            type="date"
+                            id="eventDate"
+                            class="form-input"
+                        />
+                        <span class="error-message" id="eventDateError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventTime">Event Time</label>
+                        <input
+                            type="time"
+                            id="eventTime"
+                            class="form-input"
+                        />
+                        <span class="error-message" id="eventTimeError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ticketInfo">Ticket Information (Optional)</label>
+                        <input
+                            type="text"
+                            id="ticketInfo"
+                            placeholder="e.g., ₹200-₹500, Available at venue"
+                            class="form-input"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contactInfo">Contact Information</label>
+                        <input
+                            type="text"
+                            id="contactInfo"
+                            placeholder="e.g., +91-98765-43210"
+                            class="form-input"
+                        />
+                        <span class="error-message" id="contactInfoError"></span>
+                    </div>
+
+                    <button type="submit" class="form-submit-btn">Post Promotion</button>
+                </form>
+            </section>
+
+            <!-- All Promotions Section (Everyone Can View) -->
+            <section class="dashboard-card">
+                <h2>All Event Promotions</h2>
+                <p class="section-subtitle">Discover upcoming dramas, plays, and entertainment events in Pune.</p>
+                <div id="allPromotions" class="promotions-list">
+                    <p class="empty-message">No promotions available right now. Check back soon!</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Kalakar. All rights reserved. | Connecting Pune's Entertainment Community</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/promotions.js"></script>
+</body>
+</html>
